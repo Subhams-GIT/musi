@@ -42,7 +42,7 @@ type PlayerProps = {
 const Player: React.FC<PlayerProps> = ({playerRef, playNext, currentTrack}) => {
   const ws = useContext(WebSocketContext);
   const [isPlaying, setIsPlaying] = useState(false);
-
+  console.log(playerRef.current);
   return (
     <div>
       <Card>
@@ -70,7 +70,7 @@ const Player: React.FC<PlayerProps> = ({playerRef, playNext, currentTrack}) => {
                     ws?.current?.send(
                       JSON.stringify({type: "playsong", song: currentTrack})
                     );
-                  } else {
+                  } else if (event.data === YouTube.PlayerState.PAUSED) {
                     ws?.current?.send(
                       JSON.stringify({type: "pausesong", song: currentTrack})
                     );
