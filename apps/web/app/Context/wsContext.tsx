@@ -15,13 +15,30 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     };
 
     ws.current.onclose = () => {
+      setTimeout(() => {
+        reconnect();
+      }, 3000);
       console.log("WebSocket closed");
     };
 
     return () => {
       ws.current?.close();
+      ws
     };
   }, []);
+
+  function reconnect(){
+    ws.current = new WebSocket('ws://localhost:8080');
+
+    ws.current.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.current.onclose = () => {
+      console.log("WebSocket closed");
+    };
+  }
+
 
   return (
     <WebSocketContext.Provider value={ws}>

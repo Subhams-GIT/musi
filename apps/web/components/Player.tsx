@@ -43,6 +43,22 @@ const Player: React.FC<PlayerProps> = ({playerRef, playNext, currentTrack}) => {
   const ws = useContext(WebSocketContext);
   const [isPlaying, setIsPlaying] = useState(false);
   console.log(playerRef.current);
+  const [time, settime] = useState(0);
+
+  const clickHandler = () => {
+    if (!playerRef.current) return;
+
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
+      // setInterval(() => {
+      //   settime(time=>time+1)
+      // }, 1000);
+    }
+
+    setIsPlaying(!isPlaying);
+  };
   return (
     <div>
       <Card>
@@ -61,7 +77,11 @@ const Player: React.FC<PlayerProps> = ({playerRef, playNext, currentTrack}) => {
                 opts={opts}
                 onReady={(event) => {
                   ws?.current?.send(
-                    JSON.stringify({type: "currentsong", song: currentTrack})
+                    JSON.stringify({
+                      type: "currentsong",
+                      song: currentTrack,
+                      isplaying: isPlaying,
+                    })
                   );
                   playerRef.current = event.target;
                 }}
@@ -120,17 +140,7 @@ const Player: React.FC<PlayerProps> = ({playerRef, playNext, currentTrack}) => {
                 </Button>
                 <Button
                   size="icon"
-                  onClick={() => {
-                    if (!playerRef.current) return;
-
-                    if (isPlaying) {
-                      playerRef.current.pauseVideo();
-                    } else {
-                      playerRef.current.playVideo();
-                    }
-
-                    setIsPlaying(!isPlaying);
-                  }}
+                  onClick={clickHandler}
                 >
                   {isPlaying ? <PauseIcon /> : <PlayIcon />}
                 </Button>

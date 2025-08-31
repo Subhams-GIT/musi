@@ -28,7 +28,7 @@ wss.on('connection', (ws) => {
 					currentsongstate.song = message.song; // Fixed: update state
 					currentsongstate.isplaying = true;
 					wss.clients.forEach(client => {
-						if (client.readyState === client.OPEN) { // Fixed: check connection state
+						if (client.readyState === client.OPEN) { 
 							client.send(JSON.stringify({
 								type: 'playsong',
 								song: message.song,
@@ -41,7 +41,7 @@ wss.on('connection', (ws) => {
 				case 'pausesong':
 					currentsongstate.isplaying = false;
 					wss.clients.forEach(client => {
-						if (client.readyState === client.OPEN) { // Fixed: check connection state
+						if (client.readyState === client.OPEN) { 
 							client.send(JSON.stringify({
 								type: 'pausesong',
 								song: currentsongstate.song,
@@ -53,7 +53,7 @@ wss.on('connection', (ws) => {
 					
 				case 'currentsong':
 					currentsongstate.song = message.song;
-					currentsongstate.isplaying = message.isPlaying || false; // Fixed: consistent naming
+					currentsongstate.isplaying = message.isPlaying || false; 
 					// Broadcast to all other clients
 					wss.clients.forEach(client => {
 						if (client !== ws && client.readyState === client.OPEN) {
@@ -71,10 +71,10 @@ wss.on('connection', (ws) => {
 					ws.send(JSON.stringify({
 						type: 'currentsong',
 						song: currentsongstate.song,
-						isPlaying: currentsongstate.isplaying // Fixed: consistent naming
+						isPlaying: currentsongstate.isplaying
 					}));
 					break;
-					
+				
 				default:
 					console.log('Unknown message type:', message.type);
 			}
