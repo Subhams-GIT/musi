@@ -5,10 +5,10 @@ import { createShareLink } from "@repo/redis/src/index";
 export  async function POST(req: NextRequest) {
 	const re = await req.json();
 	const id=re.id;
-	console.log(id);
+	// console.log(id);
 	try {
 		const res = await createShareLink(id,"");
-		console.log("res",res);
+		// console.log("res",res);
 		return NextResponse.json({
 			message:res
 		})
@@ -19,13 +19,13 @@ export  async function POST(req: NextRequest) {
 
 export async function GET(req:NextRequest){
 	const hash=req.nextUrl.searchParams.get('h');
-	console.log('hash',hash)
+	// console.log('hash',hash)
 	try {
 		if(!hash){
 			return ;
 		}
 		const res=await createShareLink("",hash);
-		console.log(res);
+		// console.log(res);
 		
 		return NextResponse.json({
 			res:res

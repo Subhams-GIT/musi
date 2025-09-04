@@ -39,7 +39,7 @@ export async function POST(req:NextRequest){
 			where:{
 				userId_streamId:{
 					userId:session.user.id,
-				streamId:data.streamId	
+					streamId:data.streamId	
 				}
 			}
 		})	

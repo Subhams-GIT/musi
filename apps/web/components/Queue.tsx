@@ -25,7 +25,7 @@ import {
   QueueIcon,
 } from "../app/utils/icons";
 import handleVote, { removefromActive } from "../app/utils/vote";
-import { getsctive } from "../app/utils/GetActive";
+// import { getsctive } from "../app/utils/GetActive";
 import { ChevronUpCircleIcon } from "lucide-react";
 
 
@@ -52,7 +52,7 @@ const Queue = ({ queue, setQueue, setCurrentTrack }: any) => {
   
   const sortedQueue = queue.length > 1
     ? [...queue].sort((a: Track, b: Track) => b.upvotes - a.upvotes)
-    : queue;
+    : [queue];
 
   return (
     <div className="overflow-hidden rounded-lg h-fit bg-white shadow-sm">

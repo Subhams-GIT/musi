@@ -1,10 +1,14 @@
-export async function getsctive() {
+
+
+export async function getsctive(id:string) {
+	console.log('streamer id',id)
 	try {
-		const res=await fetch("http://localhost:3000/api/streams/active",{
+		const res=await fetch(`http://localhost:3000/api/streams/active?id=${id}`,{
 		method:'GET',
 		headers:{
 			'Content-Type': 'application/json'
 		},
+		
 	})
 
 	const data=await res.json();

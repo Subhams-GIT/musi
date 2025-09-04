@@ -14,6 +14,8 @@ import YouTube, {YouTubeProps} from "react-youtube";
 import {MusicIcon, YoutubeIcon} from "lucide-react";
 import {Avatar, Badge, Button} from "../../app/utils/utils";
 import {WebSocketContext} from "../../app/Context/wsContext";
+import { SharedQeue } from "../../components/SharedQeue";
+
 
 const opts: YouTubeProps["opts"] = {
   height: "10",
@@ -91,17 +93,10 @@ export default function Page() {
     [ws, playerReady, playerRef]
   );
 
-  // useEffect(() => {
-  //   if (!ws?.current) return;
-  //   ws.current.onopen = () => {
-  //     ws?.current?.addEventListener("message", handleMessage);
-  //   };
-  //   return () => {
-  //     ws.current?.removeEventListener("message", handleMessage);
-  //   };
-  // }, [ws, handleMessage]);
 
+  
   useEffect(() => {
+
     setTimeout(() => {
       if (!ws?.current) return;
       console.log("WebSocket state:", ws?.current.readyState);
@@ -214,6 +209,7 @@ export default function Page() {
           )}
         </CardContent>
       </Card>
+      <SharedQeue streamerid={hashedId as string}/>
     </div>
   );
 }

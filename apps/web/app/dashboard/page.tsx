@@ -26,7 +26,7 @@ export default function StreamingDashboard() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-      getsctive().then((data) => {
+      getsctive(session.data?.user.id).then((data) => {
         if (data) {
           setQueue(data);
         }
@@ -58,7 +58,7 @@ export default function StreamingDashboard() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({id: session.data?.user.id}),
       });
-      console.log("res", res);
+      // console.log("res", res);
       const data = await res.json();
       // console.log("redis",data)
       setShareLink(data.message);

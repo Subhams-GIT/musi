@@ -24,3 +24,17 @@ export async function createShareLink(userId='', hashed = '') {
   return `http://localhost:3000/share?h=${hash}`;
 
 }
+export default async function getstreamerid(hashedid:string){
+  const redis=await getRedisClient();
+  const hashed=hashedid.trim();
+  if(hashed.length==0){
+    throw new Error("id not provided")
+  }
+  if (await redis.exists(hashed)) {
+      const result=await redis.get(hashed);
+      return result;
+    }
+    else{
+      return new Error("user not found check the link and try again !")
+    }
+}
