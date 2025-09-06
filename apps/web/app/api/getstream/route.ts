@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 	}
 		let streamerid = await createShareLink("", data)
 		console.log("active", streamerid)
-		streamerid=streamerid.replace(/^"|"$/g, "");
+		streamerid=streamerid?.replace(/^"|"$/g, "") as string;
 		try {
 			const res = await fetch(`http://localhost:3000/api/streams/active?id=${streamerid}`, {
 				method: 'GET',
