@@ -18,23 +18,19 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    // Persist user id and token in JWT
-    async jwt({ token, user, account }) {
+    // Persist user id in JWT
+    async jwt({ token, user }) {
       if (user) {
         console.log(user);
         token.id = user.id;
       }
-      if (account?.access_token) {
-        token.accessToken = account.access_token;
-      }
       return token;
     },
 
-    // Make the id and token available in the session
+    // Make the id available in the session
     async session({ session, token, user }) {
       if (token) {
         session.user.id = token.id as string;
-        session.user.token = token.accessToken as string;
       }
       return session;
     },

@@ -4,7 +4,6 @@ declare module "next-auth"{
 	interface Session{
 		user:{
 			id:String
-			token?:String
 		} & DefaultSession["user"]
 	}
 }

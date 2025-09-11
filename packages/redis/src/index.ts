@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { getRedisClient } from "./redisClient";
-export { getRedisClient } from "./redisClient";
 
 export async function createShareLink(userId='', hashed = '') {
   const redis = await getRedisClient();
@@ -8,13 +7,13 @@ export async function createShareLink(userId='', hashed = '') {
     console.log(JSON.stringify(hashed));
     
     if (await redis.exists(hashed)) {
-      // console.log(hashed)
+      console.log(hashed)
       const result=await redis.get(hashed);
-      // console.log(result);
+      console.log(result);
       return result;
     }
     else{
-      throw  new Error("user not found check the link and try again !")
+      return new Error("user not found check the link and try again !")
     }
   }
 

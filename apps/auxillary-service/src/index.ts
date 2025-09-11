@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { v4 } from "uuid";
 
-export const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 8080 });
 const connectedclients = new Set();
 const currentsongstate = {
 	song: null,

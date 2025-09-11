@@ -1,7 +1,6 @@
 {
   "name": "@repo/redis",
-  "module": "src/index.ts",
-  "main": "src/index.ts",
+  "module": "index.ts",
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
