@@ -10,12 +10,13 @@ const Player = dynamic(() => import("../../components/Player"));
 const Search = dynamic(() => import("../../components/Search"));
 const Queue = dynamic(() => import("../../components/Queue"));
 import {Share2Icon} from "lucide-react";
-import { getsctive } from "../utils/GetActive";
-import { WebSocketContext } from "../Context/wsContext";
+import {getsctive} from "../utils/GetActive";
+import {WebSocketContext} from "../Context/wsContext";
+// import {streamManager} from "../../../auxillary-service/src/streammanager";
 
 export default function StreamingDashboard() {
   const session = useSession();
-  const ws = useContext(WebSocketContext)
+  const ws = useContext(WebSocketContext);
   const playerRef = useRef<YouTubePlayer | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Track>();
   const [isPlaying, setIsPlaying] = useState(true);
@@ -24,14 +25,16 @@ export default function StreamingDashboard() {
   const router = useRouter();
   const [shareLink, setShareLink] = useState("");
   const [showModal, setShowModal] = useState(false);
+  // const streamManagerins = streamManager.getInstance();
 
   useEffect(() => {
-      getsctive(session.data?.user.id).then((data) => {
-        if (data) {
-          setQueue(data);
-        }
-      });
-    }, []);
+    getsctive(session.data?.user.id).then((data) => {
+      if (data) {
+        setQueue(data);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (!session.data?.user) {
       router.replace("/");
@@ -58,9 +61,15 @@ export default function StreamingDashboard() {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({id: session.data?.user.id}),
       });
-      // console.log("res", res);
       const data = await res.json();
-      // console.log("redis",data)
+      ws?.current?.send(
+        JSON.stringify({
+          type: "createRoom",
+          roomId: data.message,
+          userId: session.data?.user.id,
+          token: session.data?.user.accessToken,
+        })
+      );
       setShareLink(data.message);
       setShowModal(true);
     } catch (err) {
@@ -80,9 +89,7 @@ export default function StreamingDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0">
-        {/* Header */}
         <header className=" w-full flex justify-around items-center gap-4 h-16 px-4 bg-white border-b border-gray-200">
           <div className=" flex items-center gap-2 text-sm font-medium text-gray-900 justify-around">
             <MusicIcon />
@@ -109,10 +116,8 @@ export default function StreamingDashboard() {
           </div>
         </header>
 
-        {/* Content */}
         <div className="flex-1 p-4 overflow-auto">
           <div className="max-w-7xl mx-auto space-y-6 my-10">
-            {/* Now Playing Section */}
             <Player
               ws={ws}
               currentTrack={currentTrack}
@@ -122,7 +127,6 @@ export default function StreamingDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 grid-rows-1">
               <Queue
-                // ws={socket}
                 queue={queue}
                 setQueue={setQueue}
                 currentTrack={currentTrack}

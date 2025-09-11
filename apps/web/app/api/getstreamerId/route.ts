@@ -16,9 +16,12 @@ export async function GET(req: NextRequest) {
 
   try {
     let active = await getstreamerid(streamerId)
-	active=active.replace(/^"|"$/g, "")
+    if(typeof active !== 'string'){
+      throw new Error("user not found check the link and try again !")
+    }
+    active = active.replace(/^"|"$/g, "")
     return NextResponse.json({
-		active
+      active
     });
   } catch (error) {
     console.error(error);

@@ -13,6 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/redis": "workspace:*",
     "uuid": "^11.1.0",
     "ws": "^8.18.3"
   },

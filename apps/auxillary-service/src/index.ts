@@ -1,7 +1,9 @@
 import { WebSocketServer } from "ws";
 import { v4 } from "uuid";
+// import { streamManager } from "./streammanager";
+// const streamManagerins = streamManager.getInstance();
 
-const wss = new WebSocketServer({ port: 8080 });
+export const wss = new WebSocketServer({ port: 8080 });
 const connectedclients = new Set();
 const currentsongstate = {
 	song: null,
@@ -50,11 +52,10 @@ wss.on('connection', (ws) => {
 						}
 					});
 					break;
-					
+									
 				case 'currentsong':
 					currentsongstate.song = message.song;
 					currentsongstate.isplaying = message.isPlaying || false; 
-					// Broadcast to all other clients
 					wss.clients.forEach(client => {
 						if (client !== ws && client.readyState === client.OPEN) {
 							client.send(JSON.stringify({
@@ -67,14 +68,13 @@ wss.on('connection', (ws) => {
 					break;
 					
 				case 'sync':
-					console.log('Sync requested, sending current state:', currentsongstate);
+					// console.log('Sync requested, sending current state:', currentsongstate);
 					ws.send(JSON.stringify({
 						type: 'currentsong',
 						song: currentsongstate.song,
 						isPlaying: currentsongstate.isplaying
 					}));
 					break;
-				
 				default:
 					console.log('Unknown message type:', message.type);
 			}

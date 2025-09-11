@@ -1,7 +1,6 @@
-
 'use client'
 import React, { createContext, useRef, useEffect } from 'react';
-
+// import type { WebSocket } from 'ws';
 export const WebSocketContext = createContext<React.RefObject<WebSocket|null> | null>(null);
 
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {

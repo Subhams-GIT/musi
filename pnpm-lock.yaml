@@ -20,6 +20,12 @@ importers:
 
   apps/auxillary-service:
     dependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@repo/redis':
+        specifier: workspace:*
+        version: link:../../packages/redis
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -35,10 +41,10 @@ importers:
         version: 3.1.10
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@24.3.0)(typescript@5.9.2)
+        version: 10.9.2(@types/node@24.3.1)(typescript@5.9.2)
       ts-node-dev:
         specifier: ^2.0.0
-        version: 2.0.0(@types/node@24.3.0)(typescript@5.9.2)
+        version: 2.0.0(@types/node@24.3.1)(typescript@5.9.2)
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -130,7 +136,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.20(@types/react@19.1.0)
+        version: 1.2.21(@types/react@19.1.0)
 
   packages/eslint-config:
     devDependencies:
@@ -185,7 +191,7 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.20(@types/react@19.1.0)
+        version: 1.2.21(@types/react@19.1.0)
 
   packages/typescript-config: {}
 
@@ -676,8 +682,8 @@ packages:
   '@types/bcrypt@6.0.0':
     resolution: {integrity: sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ==}
 
-  '@types/bun@1.2.20':
-    resolution: {integrity: sha512-dX3RGzQ8+KgmMw7CsW4xT5ITBSCrSbfHc36SNT31EOUg/LA9JWq0VDdEXDRSe1InVWpd2yLUM1FUF/kEOyTzYA==}
+  '@types/bun@1.2.21':
+    resolution: {integrity: sha512-NiDnvEqmbfQ6dmZ3EeUO577s4P5bf4HCTXtI6trMc6f6RzirY5IrF3aIookuSpyslFzrnvv2lmEWv5HyC1X79A==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -690,6 +696,9 @@ packages:
 
   '@types/node@24.3.0':
     resolution: {integrity: sha512-aPTXCrfwnDLj4VvXrm+UUCQjNEvJgNA8s5F1cvwQU+3KNltTOkBm1j30uNLyqqPNe7gE3KFzImYoZEfLhp4Yow==}
+
+  '@types/node@24.3.1':
+    resolution: {integrity: sha512-3vXmQDXy+woz+gnrTvuvNrPzekOi+Ds0ReMxw0LzBiK3a+1k0kQn9f2NWk+lgD4rJehFUmYy2gMhJ2ZI+7YP9g==}
 
   '@types/react-dom@19.1.1':
     resolution: {integrity: sha512-jFf/woGTVTjUJsl2O7hcopJ1r0upqoq/vIOoCj0yLh3RIXxWcljlpuZ+vEBRXsymD1jhfeJrlyTy/S1UW+4y1w==}
@@ -864,8 +873,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bun-types@1.2.20:
-    resolution: {integrity: sha512-pxTnQYOrKvdOwyiyd/7sMt9yFOenN004Y6O4lCcCUoKVej48FS5cvTw9geRaEcB9TsDZaJKAxPTVvi8tFsVuXA==}
+  bun-types@1.2.21:
+    resolution: {integrity: sha512-sa2Tj77Ijc/NTLS0/Odjq/qngmEPZfbfnOERi0KRUYhT9R8M4VBioWVmMWE5GrYbKMc+5lVybXygLdibHaqVqw==}
     peerDependencies:
       '@types/react': ^19
 
@@ -2690,9 +2699,9 @@ snapshots:
     dependencies:
       '@types/node': 24.3.0
 
-  '@types/bun@1.2.20(@types/react@19.1.0)':
+  '@types/bun@1.2.21(@types/react@19.1.0)':
     dependencies:
-      bun-types: 1.2.20(@types/react@19.1.0)
+      bun-types: 1.2.21(@types/react@19.1.0)
     transitivePeerDependencies:
       - '@types/react'
 
@@ -2705,6 +2714,10 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/node@24.3.0':
+    dependencies:
+      undici-types: 7.10.0
+
+  '@types/node@24.3.1':
     dependencies:
       undici-types: 7.10.0
 
@@ -2944,9 +2957,9 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bun-types@1.2.20(@types/react@19.1.0):
+  bun-types@1.2.21(@types/react@19.1.0):
     dependencies:
-      '@types/node': 24.3.0
+      '@types/node': 24.3.1
       '@types/react': 19.1.0
 
   c12@3.1.0:
@@ -4354,7 +4367,7 @@ snapshots:
     dependencies:
       typescript: 5.9.2
 
-  ts-node-dev@2.0.0(@types/node@24.3.0)(typescript@5.9.2):
+  ts-node-dev@2.0.0(@types/node@24.3.1)(typescript@5.9.2):
     dependencies:
       chokidar: 3.6.0
       dynamic-dedupe: 0.3.0
@@ -4364,7 +4377,7 @@ snapshots:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 10.9.2(@types/node@24.3.0)(typescript@5.9.2)
+      ts-node: 10.9.2(@types/node@24.3.1)(typescript@5.9.2)
       tsconfig: 7.0.0
       typescript: 5.9.2
     transitivePeerDependencies:
@@ -4372,14 +4385,14 @@ snapshots:
       - '@swc/wasm'
       - '@types/node'
 
-  ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2):
+  ts-node@10.9.2(@types/node@24.3.1)(typescript@5.9.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 24.3.0
+      '@types/node': 24.3.1
       acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
