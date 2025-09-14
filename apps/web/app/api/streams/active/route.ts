@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     await prisma.stream.update({
       where: {
         id: data.streamId,
-        userId: session?.user.id ?? data.streamerId, // ensure ownership
+        userId: session?.user.id ?? data.streamerId,
       },
       data: {
         active: data.choice,
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     console.error(error);
     return NextResponse.json(
       { error: "Failed to activate stream" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
   let userId = data ?? session!.user.id;
   userId = userId.replace(/^"|"$/g, "");
-  console.log("user id ",userId)
+  console.log("user id ", userId);
   try {
     const streams = await prisma.stream.findMany({
       where: {
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     console.error(error);
     return NextResponse.json(
       { error: "Failed to fetch active streams" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

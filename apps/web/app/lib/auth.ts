@@ -2,7 +2,6 @@ import GoogleProvider from "next-auth/providers/google";
 import type { NextAuthOptions } from "next-auth";
 import { prisma } from "@repo/db";
 
-
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -40,7 +39,7 @@ const authOptions: NextAuthOptions = {
       if (!profile?.email) return false;
 
       try {
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.user.findFirst({
           where: { email: profile.email },
         });
 
@@ -67,7 +66,6 @@ const authOptions: NextAuthOptions = {
 
       return true;
     },
-
   },
   session: {
     strategy: "jwt",

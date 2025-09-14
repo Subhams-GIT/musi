@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-export { prisma } from './client' // exports instance of prisma 
-export * from "../generated/prisma" 
-export type { PrismaClient } from '@prisma/client' // exports generated types from prismap
+export { PrismaClient } from "@prisma/client/scripts/default-index.js";
+export { prisma } from "./client.js"; // exports instance of prisma
+export * from "../generated/prisma/client.js";
+// import { PrismaClient } from "@prisma/client/scripts/default-index.js";

@@ -10,26 +10,26 @@ datasource db {
 
 model User {
   id       String   @id @default(uuid())
-  name     String?
   email    String   @unique
   provider Provider
   role     Role
+  name     String?
   streams  Stream[]
   upvote   Upvote[]
 }
 
 model Stream {
-  id          String     @id @default(uuid())
-  type        StreamType
-  active      Boolean
-  upvotes     Int
-  userId      String
-  extractedId String
-  title       String    @default("")
-  smallThumbnail String @default("")
-  largeThumbnail String   @default("")
-  url         String
-  user        User       @relation(fields: [userId], references: [id])
+  id             String     @id @default(uuid())
+  type           StreamType
+  active         Boolean
+  upvotes        Int
+  userId         String
+  extractedId    String
+  url            String
+  largeThumbnail String     @default("")
+  smallThumbnail String     @default("")
+  title          String     @default("")
+  user           User       @relation(fields: [userId], references: [id])
 }
 
 model Upvote {

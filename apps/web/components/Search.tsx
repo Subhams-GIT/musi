@@ -6,7 +6,7 @@ import {
   CardTitle,
   Track,
 } from "../app/utils/utils";
-import {SearchIcon, MusicIcon} from "lucide-react";
+import { SearchIcon, MusicIcon } from "lucide-react";
 import {
   Input,
   Button,
@@ -16,22 +16,16 @@ import {
   TabsContent,
   ScrollArea,
 } from "../app/utils/utils";
-import {useEffect, useState} from "react";
-import {Avatar} from "../app/utils/utils";
-import {PlusIcon} from "lucide-react";
-import {ChevronUpIcon, ChevronDownIcon, YoutubeIcon} from "lucide-react";
-import {useRouter} from "next/navigation";
+import { useEffect, useState } from "react";
+import { Avatar } from "../app/utils/utils";
+import { PlusIcon } from "lucide-react";
+import { ChevronUpIcon, ChevronDownIcon, YoutubeIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import handleVote from "../app/utils/vote";
-import {parseTrackFromUrl} from "../app/utils/functions";
-const Search = ({
-  queue,
-  setQueue,
-  session,
-  sortBy,
-  setSortBy,
-}: any) => {
+import { parseTrackFromUrl } from "../app/utils/functions";
+const Search = ({ queue, setQueue, session, sortBy, setSortBy }: any) => {
   const router = useRouter();
-  const [urlInput,setUrlInput]=useState("");
+  const [urlInput, setUrlInput] = useState("");
   const [loading, setloading] = useState<boolean>(false);
   const [Mytracks, setMytracks] = useState<Track[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,11 +87,11 @@ const Search = ({
       }
 
       const results: Track[] = originaltracks.filter((track) =>
-        track.title.toLowerCase().includes(searchQuery.toLowerCase())
+        track.title.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
       setMytracks(results.length > 0 ? results : []);
-    }, 500); 
+    }, 500);
 
     return () => clearTimeout(timeout);
   }, [searchQuery, originaltracks]);
@@ -111,24 +105,27 @@ const Search = ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({streamId: track.id,active:true}),
-    }).catch((err) => {
-      console.error("Error adding to queue:", err);
-    });
-    if (queue.length === 0) {
-      setQueue(track);
-    } else setQueue((prev: any) => [...prev, track]);
+      body: JSON.stringify({ streamId: track.id, active: true }),
+    })
+      .then((d) => {
+        if (queue.length === 0) {
+          setQueue(track);
+        } else setQueue((prev: any) => [...prev, track]);
+      })
+      .catch((err) => {
+        console.error("Error adding to queue:", err);
+      });
   };
 
   const filteredYouTubeTracks = Mytracks.filter(
-    (track) => track.type === "Youtube"
+    (track) => track.type === "Youtube",
   );
 
   const filteredSpotifyTracks = Mytracks.filter(
     (track: any) =>
       track.type === "Spotify" &&
       (track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        track.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+        track.artist.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   return (
@@ -221,7 +218,7 @@ const Search = ({
                   <div className="space-y-2 pb-4">
                     {filteredYouTubeTracks
                       .sort((a: any, b: any) =>
-                        sortBy === "votes" ? b.upVotes - a.upVotes : 0
+                        sortBy === "votes" ? b.upVotes - a.upVotes : 0,
                       )
                       .map((track: any) => (
                         <div
@@ -305,7 +302,7 @@ const Search = ({
                   <div className="space-y-2">
                     {filteredSpotifyTracks
                       .sort((a: any, b: any) =>
-                        sortBy === "votes" ? b.upVotes - a.upVotes : 0
+                        sortBy === "votes" ? b.upVotes - a.upVotes : 0,
                       )
                       .map((track: any) => (
                         <div
