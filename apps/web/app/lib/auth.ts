@@ -1,6 +1,6 @@
 import GoogleProvider from "next-auth/providers/google";
 import type { NextAuthOptions } from "next-auth";
-import { prisma } from "@repo/db";
+import prisma  from "@repo/db";
 
 const authOptions: NextAuthOptions = {
   providers: [

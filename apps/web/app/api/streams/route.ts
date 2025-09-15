@@ -1,10 +1,22 @@
-import { prisma, PrismaClient } from "@repo/db";
+import prisma from "@repo/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod' // doubt
 import youtubesearchapi from 'youtube-search-api';
 import { getServerSession } from "next-auth";
 import authOptions from "../../lib/auth";
+type userStreams={
+	id:string
+	type:"Youtube" | "Spotify"
+	active:boolean
+	upvotes:number
+	userId:string
+	extractedId:string
+	url:string
+	largeThumbnail:string
+	smallThumbnail:string
+	title:string
 
+}
 const YT_REGEX = new RegExp(/^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/)
 const CreateStreamSchema = z.object({
 	creatorId: z.string(),
@@ -74,7 +86,7 @@ export async function POST(req: NextRequest) {
 	}
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest):Promise<NextResponse<{streams:userStreams[]}|{message:string}>> {
 	const creatorId = req.nextUrl.searchParams.get("creatorId");
 	const streams = await prisma.stream.findMany({
 		where: {

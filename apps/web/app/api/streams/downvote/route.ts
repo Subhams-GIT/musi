@@ -1,4 +1,4 @@
-import { prisma } from "@repo/db";
+import prisma  from "@repo/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import {z} from 'zod'

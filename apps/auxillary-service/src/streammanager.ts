@@ -3,8 +3,8 @@ import getRedisClient from "@repo/redis";
 import { PrismaClient } from "@repo/db";
 import type { RedisClientType } from "redis";
 import type { WebSocket } from "ws";
-import { wss } from "./index.js";
-import { prisma as prismaInstance } from "@repo/db";
+// import { wss } from "./index.js";
+import prisma  from "@repo/db";
 import { checkforurl } from "./util.js";
 
 type User = {
@@ -32,7 +32,7 @@ export class streamManager {
   private roomSockets: Map<string, User[]> = new Map();
 
   private constructor() {
-    this.prisma = prismaInstance;
+    this.prisma = prisma;
     this.queue = new Queue("stream-queue", { connection });
 
     this.worker = new Worker(
@@ -60,7 +60,7 @@ export class streamManager {
   }
 
   async initRedisClient() {
-    this.redisClient = await getRedisClient();
+    this.redisClient = await getRedisClient.default();
   }
 
   async processJob(job: Job) {
@@ -103,11 +103,7 @@ export class streamManager {
       });
       if (!userDetails) throw new Error("User not found");
 
-      wss.clients.forEach((client) => {
-        client.send(
-          JSON.stringify({ type: "joined stream", roomId, userDetails }),
-        );
-      });
+     return { type: "joined stream", roomId, userDetails };
     } catch (e) {
       console.error(e);
     }
@@ -133,9 +129,7 @@ export class streamManager {
 
       // also track creator socket
       this.roomSockets.set(roomId, [{ userId, admin: true, ws, token }]);
-      wss.clients.forEach((ws) => {
-        ws.send(JSON.stringify({ type: "room created", roomId }));
-      });
+      return { type: "room created", roomId };
     } catch (error) {
       console.error(error);
     }
@@ -153,11 +147,7 @@ export class streamManager {
       const user = await this.prisma.user.findFirst({ where: { id: userId } });
       if (!user) throw new Error("User not found");
 
-      wss.clients.forEach((client) => {
-        client.send(
-          JSON.stringify({ type: "song added in stream", streamUrl, user }),
-        );
-      });
+      return { type: "song added in stream", streamUrl, user};
     } catch (error) {
       console.error(error);
     }
@@ -173,9 +163,7 @@ export class streamManager {
       const user = await this.prisma.user.findFirst({ where: { id: userId } });
       if (!user) throw new Error("User not found");
 
-      wss.clients.forEach((client) => {
-        client.send(JSON.stringify({ type: "voted", vote, user }));
-      });
+      return { type: "voted", vote, user };
       return "voted";
     } catch (e) {
       console.error(e);
@@ -192,9 +180,7 @@ export class streamManager {
       const user = await this.prisma.user.findFirst({ where: { id: userId } });
       if (!user) throw new Error("User not found");
 
-      wss.clients.forEach((client) => {
-        client.send(JSON.stringify({ type: "removestream", streamId, user }));
-      });
+       return { type: "removestream", streamId, user };
     } catch (e) {
       console.error(e);
     }

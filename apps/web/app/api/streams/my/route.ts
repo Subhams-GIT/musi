@@ -1,27 +1,37 @@
-import { prisma } from "@repo/db";
+import prisma from "@repo/db";
 import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import {  NextResponse } from "next/server";
 import authOptions from "../../../lib/auth";
+// import { StreamState } from "http2";
 
-
-/*
-id          String     @id @default(uuid())
-  type        StreamType
-  active      Boolean
-  upvotes     Int
-  userId      String
-  extractedId String
-  title       String    @default("")
-  smallThumbnail String @default("")
-  largeThumbnail String   @default("")
-  url         String
-  user        User       @
-
-*/
-export async function GET() {
+type Streams={
+	  id:string
+	  type:"Youtube" | "Spotify"
+	  active:boolean
+	  upvotes:number
+	  userId:string
+	  extractedId:string
+	  url:string
+	  largeThumbnail:string
+	  smallThumbnail:string
+	  title:string
+	  user:{
+		id:string
+		name:string | null
+	  }
+}
+export async function GET():Promise<Streams[] | any> {
 	const session = await getServerSession(authOptions);
 	console.log(session?.user.id, "session user id");
-	const streams = await prisma.stream.findMany({
+	if(!session?.user?.id){
+		return NextResponse.json({
+			message:"user not found"
+		},{
+			status:404
+		});
+	}
+	try {
+		const streams = await prisma.stream.findMany({
 		where: {
 			userId:session?.user.id ?? ""
 		},
@@ -40,5 +50,14 @@ export async function GET() {
 
 	return NextResponse.json({
 		streams
-	})
+	})	
+} catch (error) {
+	console.error(error);
+	return NextResponse.json({
+		message: "Failed to fetch streams"
+	}, {
+		status: 500
+	});
+}
+
 }

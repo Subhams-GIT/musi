@@ -39,21 +39,11 @@ export const SharedQeue = (props: sharedQueueProps) => {
         res.json().then((streams) =>{
           console.log(streams.streams)
           setQueue(streams.streams)
+          setstreamerid(streams.streamerID)
         })
         console.log(res)
       })
       .catch((err) => console.log(err));
-      fetch("http://localhost:3000/api/getstreamerId?id="+hashedid,{
-        method:'GET',
-        headers:{
-        'Content-Type': 'application/json'
-      },
-      }).then(res=>{
-        res.json().then(id=>{
-          setstreamerid(id.active)
-        })
-      })
-
     },[])
   const handle = async (track: Track, choice: "up" | "down") => {
     try {

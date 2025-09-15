@@ -1,8 +1,19 @@
 import { getServerSession } from "next-auth";
 import authOptions from "../../../lib/auth";
-import { prisma } from "@repo/db";
+import prisma  from "@repo/db";
 import { NextRequest, NextResponse } from "next/server";
-
+type Streams={
+  id:string
+  type:"Youtube" | "Spotify"
+  active:boolean
+  upvotes:number
+  userId:string
+  extractedId:string
+  url:string
+  largeThumbnail:string
+  smallThumbnail:string
+  title:string
+}
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const data = await req.json();
@@ -32,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) :Promise<NextResponse<{streams:Streams[]}|{error:String}>>{
   const data = req.nextUrl.searchParams.get("id");
   const session = await getServerSession(authOptions);
 

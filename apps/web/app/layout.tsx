@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Provider from "./provider";
 import { WebSocketProvider } from "./Context/wsContext";
+import { Suspense } from "react";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Provider>
           <WebSocketProvider>
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
           </WebSocketProvider>
         
         </Provider>

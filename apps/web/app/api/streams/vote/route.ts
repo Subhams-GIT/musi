@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import authOptions from "../../../lib/auth";
-import { prisma } from "@repo/db";
+import prisma  from "@repo/db";
 import z from 'zod'
 
 const voteSchema = z.object({
