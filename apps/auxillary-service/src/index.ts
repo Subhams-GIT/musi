@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { v4 } from "uuid";
-import { streamManager } from "./streammanager.js";
-const manager = streamManager.getInstance();
+// import { streamManager } from "./streammanager.js";
+// const manager = streamManager.getInstance();
 
 export const wss = new WebSocketServer({ port: 8080 });
 const connectedclients = new Set();
@@ -83,35 +83,35 @@ wss.on("connection", (ws) => {
             }),
           );
           break;
-        case "createRoom":
-          const roomid = message.roomid;
-          const userid = message.userid;
-          const token = message.token;
-          manager.createRoom(roomid, userid, ws, token);
-          break;
-        case "joinRoom":
-          const room = message.roomid;
-          const joinerid = message.userid;
-          const jointoken = message.token;
-          manager
-            .joinRoom(room, joinerid, ws, jointoken)
-            .then((data) => {
-              console.log(`${userid} joined `);
-            })
-            .catch((err) => {
-              console.error(err);
-            });
-          break;
-        case "vote":
-          const stream = message.streamID;
-          const user = message.userID;
-          const vote = message.choice;
-          manager.vote(stream, user, vote).catch((e) => {});
-          break;
-        // case 'addStream':
-        //   const streamurl = message.streamUrl;
-        //   const streamid = message.streamID;
-        //   const userID = message.userID;
+        // case "createRoom":
+        //   const roomid = message.roomid;
+        //   const userid = message.userid;
+        //   const token = message.token;
+        //   manager.createRoom(roomid, userid, ws, token);
+        //   break;
+        // case "joinRoom":
+        //   const room = message.roomid;
+        //   const joinerid = message.userid;
+        //   const jointoken = message.token;
+        //   manager
+        //     .joinRoom(room, joinerid, ws, jointoken)
+        //     .then((data) => {
+        //       console.log(`${userid} joined `);
+        //     })
+        //     .catch((err) => {
+        //       console.error(err);
+        //     });
+        //   break;
+        // case "vote":
+        //   const stream = message.streamID;
+        //   const user = message.userID;
+        //   const vote = message.choice;
+        //   manager.vote(stream, user, vote).catch((e) => {});
+        //   break;
+        // // case 'addStream':
+        // //   const streamurl = message.streamUrl;
+        // //   const streamid = message.streamID;
+        // //   const userID = message.userID;
         // manager.addStream(streamurl,streamid,userID)
         default:
           console.log("Unknown message type:", message.type);
