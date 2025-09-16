@@ -17,7 +17,6 @@ import {
 import {
   YoutubeIcon,
   MusicIcon,
-  ChevronUpIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
   PlayIcon,

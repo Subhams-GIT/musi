@@ -19,7 +19,7 @@ const Queue = dynamic(() => import("../../components/Queue"));
 import { Share2Icon } from "lucide-react";
 import { getsctive } from "../utils/GetActive";
 import { WebSocketContext } from "../Context/wsContext";
-// import {streamManager} from "../../../auxillary-service/src/streammanager";
+
 
 export default function StreamingDashboard() {
   const session = useSession();
@@ -32,7 +32,8 @@ export default function StreamingDashboard() {
   const router = useRouter();
   const [shareLink, setShareLink] = useState("");
   const [showModal, setShowModal] = useState(false);
-  // const streamManagerins = streamManager.getInstance();
+  const [joined, setjoin] = useState(false);
+  const [joinlink, setjoinlink] = useState("");
 
   useEffect(() => {
     if (!session.data?.user) {
@@ -57,6 +58,10 @@ export default function StreamingDashboard() {
       );
     }
   };
+  const joinStream = () => {
+    setjoin(true)
+    // router.replace(`/share?h=${joinlink}`);
+  }
 
   const handlemessage = useCallback((event: MessageEvent) => {
     const { type, data } = JSON.parse(event.data);
@@ -64,7 +69,7 @@ export default function StreamingDashboard() {
       case "room created":
         console.log(data);
         break;
-      case "joined stream":
+      case "user joined":
         console.log(data);
         break;
     }
@@ -75,25 +80,33 @@ export default function StreamingDashboard() {
       if (!ws?.current) return;
       console.log("WebSocket state:", ws?.current.readyState);
       ws?.current?.addEventListener("message", handlemessage);
-      // ws.current.send(JSON.stringify({type: "sync"}));
     }, 1000);
   }, [ws]);
+
   async function getlink() {
     try {
+      if(!sessionStorage.getItem("invite-link")){
+        setShareLink(sessionStorage.getItem("invite-link")?? "")
+        return sessionStorage.getItem("invite-link");
+      }
       const res = await fetch("http://localhost:3000/api/dashboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: session.data?.user.id }),
       });
       const data = await res.json();
+      sessionStorage.setItem("invite-link",data.message);
+      console.log("before sending")
       ws?.current?.send(
         JSON.stringify({
           type: "createRoom",
-          roomId: data.message,
+          roomId: data.message.split("h=")[1],
           userId: session.data?.user.id,
           token: session.data?.user.accessToken,
         }),
       );
+      // console.log(data.message.split("h=")[1]);
+      console.log("after sending")
       setShareLink(data.message);
       setShowModal(true);
     } catch (err) {
@@ -137,6 +150,14 @@ export default function StreamingDashboard() {
               <Share2Icon className="h-4 w-4 mx-1" />
               Share
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="text-black w-fit px-1 py-1 mx-2"
+              onClick={joinStream}>
+              <Share2Icon className="h-4 w-4 mx-1" />
+              Join Room
+            </Button>
           </div>
         </header>
 
@@ -168,19 +189,34 @@ export default function StreamingDashboard() {
           </div>
         </div>
       </div>
+      {
+        joined && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-99">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center gap-4 ">
+              <input type="text" onChange={e => setjoinlink(e.target.value)} />
+              <button className="border -b px-2 py-1 bg-blue-500" onClick={() => {
+                router.replace(joinlink)
+              }}>join stream</button>
+              <button onClick={() => setjoin(false)}>
+                close
+              </button>
+            </div>
+          </div>
+        )
+      }
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-99">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
             <h2 className="text-lg font-bold mb-4">Share this link</h2>
             <input
               type="text"
-              value={shareLink}
+              value={shareLink.split("h=")[1]}
               readOnly
               className="border px-2 py-1 w-full mb-4"
             />
             <div className="flex justify-center gap-2">
               <Button onClick={() => navigator.clipboard.writeText(shareLink)}>
-                Copy Link
+                Copy ID
               </Button>
               <Button variant="outline" onClick={() => setShowModal(false)}>
                 Close

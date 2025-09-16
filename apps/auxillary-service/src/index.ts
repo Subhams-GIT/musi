@@ -1,130 +1,165 @@
 import { WebSocketServer } from "ws";
 import { v4 } from "uuid";
-// import { streamManager } from "./streammanager.js";
-// const manager = streamManager.getInstance();
+import { streamManager } from "./streammanager.js";
 
+const manager = streamManager.getInstance();
 export const wss = new WebSocketServer({ port: 8080 });
-const connectedclients = new Set();
-const currentsongstate = {
-  song: null,
-  isplaying: false, // Fixed: was null, should be boolean
+
+const connectedClients = new Set<string>();
+const currentSongState = {
+  song: null as string | null,
+  isPlaying: false,
 };
 
 wss.on("connection", (ws) => {
   console.log("New client connected");
 
-  const clientid = v4();
-  connectedclients.add(clientid);
+  const clientId = v4();
+  connectedClients.add(clientId);
 
   ws.onerror = (error) => {
-    console.error("WebSocket error:", error); // Fixed: was incomplete
+    console.error("WebSocket error:", error);
   };
 
-  ws.onmessage = (event) => {
+  ws.onmessage = async (event) => {
     try {
-      const message = JSON.parse(event.data.toString()); // Fixed: convert buffer to string
+      const message = JSON.parse(event.data.toString());
       console.log("Received message type:", message.type);
 
       switch (message.type) {
         case "playsong":
-          currentsongstate.song = message.song; // Fixed: update state
-          currentsongstate.isplaying = true;
-          wss.clients.forEach((client) => {
-            if (client.readyState === client.OPEN) {
-              client.send(
-                JSON.stringify({
-                  type: "playsong",
-                  song: message.song,
-                  isPlaying: true,
-                }),
-              );
-            }
+          currentSongState.song = message.song;
+          currentSongState.isPlaying = true;
+          broadcast({
+            type: "playsong",
+            song: message.song,
+            isPlaying: true,
           });
           break;
 
         case "pausesong":
-          currentsongstate.isplaying = false;
-          wss.clients.forEach((client) => {
-            if (client.readyState === client.OPEN) {
-              client.send(
-                JSON.stringify({
-                  type: "pausesong",
-                  song: currentsongstate.song,
-                  isPlaying: false,
-                }),
-              );
-            }
+          currentSongState.isPlaying = false;
+          broadcast({
+            type: "pausesong",
+            song: currentSongState.song,
+            isPlaying: false,
           });
           break;
 
         case "currentsong":
-          currentsongstate.song = message.song;
-          currentsongstate.isplaying = message.isPlaying || false;
-          wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === client.OPEN) {
-              client.send(
-                JSON.stringify({
-                  type: "currentsong",
-                  song: currentsongstate.song,
-                  isPlaying: currentsongstate.isplaying,
-                }),
-              );
-            }
+          currentSongState.song = message.song;
+          currentSongState.isPlaying = message.isPlaying || false;
+          broadcastExcept(ws, {
+            type: "currentsong",
+            song: currentSongState.song,
+            isPlaying: currentSongState.isPlaying,
           });
           break;
 
         case "sync":
-          // console.log('Sync requested, sending current state:', currentsongstate);
           ws.send(
             JSON.stringify({
               type: "currentsong",
-              song: currentsongstate.song,
-              isPlaying: currentsongstate.isplaying,
-            }),
+              song: currentSongState.song,
+              isPlaying: currentSongState.isPlaying,
+            })
           );
           break;
-        // case "createRoom":
-        //   const roomid = message.roomid;
-        //   const userid = message.userid;
-        //   const token = message.token;
-        //   manager.createRoom(roomid, userid, ws, token);
-        //   break;
-        // case "joinRoom":
-        //   const room = message.roomid;
-        //   const joinerid = message.userid;
-        //   const jointoken = message.token;
-        //   manager
-        //     .joinRoom(room, joinerid, ws, jointoken)
-        //     .then((data) => {
-        //       console.log(`${userid} joined `);
-        //     })
-        //     .catch((err) => {
-        //       console.error(err);
-        //     });
-        //   break;
-        // case "vote":
-        //   const stream = message.streamID;
-        //   const user = message.userID;
-        //   const vote = message.choice;
-        //   manager.vote(stream, user, vote).catch((e) => {});
-        //   break;
-        // // case 'addStream':
-        // //   const streamurl = message.streamUrl;
-        // //   const streamid = message.streamID;
-        // //   const userID = message.userID;
-        // manager.addStream(streamurl,streamid,userID)
+
+        case "createRoom": {
+          const roomId = message.roomId;
+          const userId = message.userId;
+          if (!roomId || !userId) throw new Error("Missing roomId or userId");
+          try {
+            await manager.createRoom(roomId, userId, ws);
+            console.log(`${userId} created room ${roomId}`);
+            ws.send(JSON.stringify({ type: "room created", roomId }));
+          } catch (err) {
+            console.error("createRoom error:", err);
+          }
+          break;
+        }
+
+        case "joinRoom": {
+          const roomId = message.roomId;
+          const joinerId = message.userId;
+          console.log(`Join room request: roomId=${roomId}, userId=${joinerId}`);
+          if (!roomId || !joinerId) throw new Error("Missing roomId or userId");
+          try {
+            const data = await manager.joinRoom(roomId, joinerId, ws);
+            broadcast({
+              type: "user joined",
+              user: data.userId,
+              roomId,
+            });
+            console.log(`${joinerId} joined room ${roomId}`);
+          } catch (err) {
+            console.error("joinRoom error:", err);
+          }
+          break;
+        }
+
+        case "vote": {
+          const { streamId, userId, choice } = message;
+          if (streamId && userId && choice !== undefined) {
+            try {
+              
+              manager.vote(streamId, userId, choice).catch(console.error);
+              
+            } catch (error) {
+              console.error(error)
+            }
+          }
+          break;
+        }
+
+        case "addStream": {
+          const { streamUrl, streamId, userId } = message;
+          if (streamUrl && streamId && userId) {
+            try{
+              const res=await manager.addStream(streamUrl, streamId, userId);
+              broadcast({
+                type:"added stream",
+                res,
+                userId
+              })
+            }
+            catch(e){
+              console.error(e)
+            }
+          }
+          break;
+        }
         default:
           console.log("Unknown message type:", message.type);
       }
     } catch (error) {
-      console.error("Error parsing message:", error);
+      console.error("Error parsing/handling message:", error);
     }
   };
 
   ws.onclose = () => {
     console.log("Client disconnected");
-    connectedclients.delete(clientid);
+    connectedClients.delete(clientId);
   };
 });
 
 console.log("WebSocket server running on port 8080");
+
+
+function broadcast(payload: object) {
+  const data = JSON.stringify(payload);
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) client.send(data);
+  });
+}
+
+
+function broadcastExcept(sender: any, payload: object) {
+  const data = JSON.stringify(payload);
+  wss.clients.forEach((client) => {
+    if (client !== sender && client.readyState === client.OPEN) {
+      client.send(data);
+    }
+  });
+}

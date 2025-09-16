@@ -15,6 +15,8 @@ import {MusicIcon, YoutubeIcon} from "lucide-react";
 import {Avatar, Badge, Button} from "../../app/utils/utils";
 import {WebSocketContext} from "../../app/Context/wsContext";
 import { SharedQeue } from "../../components/SharedQeue";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 
 const opts: YouTubeProps["opts"] = {
@@ -31,6 +33,8 @@ const opts: YouTubeProps["opts"] = {
 };
 
 export default function Page() {
+  const session=useSession();
+  const router=useRouter();
   const ws = useContext(WebSocketContext);
   const hashedId = useSearchParams().get("h");
   const [playerReady, setPlayerReady] = useState(false);
@@ -77,7 +81,9 @@ export default function Page() {
               }
             }, 1000);
             break;
-
+          case 'joined stream':
+            console.log(data);
+            break;
           case "pausesong":
             console.log("Pause song received");
             setIsPlaying(false);
@@ -85,7 +91,10 @@ export default function Page() {
               playerRef.current.pauseVideo();
             }
             break;
-        }
+          case 'added stream':
+            console.log(data);
+            break;
+          }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -93,15 +102,17 @@ export default function Page() {
     [ws, playerReady, playerRef]
   );
 
-
   
   useEffect(() => {
-
+    if(!session.data?.user) {
+      router.replace('/dashboard')
+    }
     setTimeout(() => {
       if (!ws?.current) return;
       console.log("WebSocket state:", ws?.current.readyState);
       ws?.current?.addEventListener("message", handleMessage);
       ws.current.send(JSON.stringify({type: "sync"}));
+      ws.current.send(JSON.stringify({type: "joinRoom", roomId:hashedId,userId:session.data?.user.id}));
     }, 1000);
    
   }, [ws]);

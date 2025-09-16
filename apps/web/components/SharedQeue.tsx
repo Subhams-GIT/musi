@@ -1,5 +1,5 @@
 'use client'
-import {useEffect} from "react";
+import {useContext, useEffect} from "react";
 import React, {useState} from "react";
 import {
   Avatar,
@@ -7,6 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Input,
   ScrollArea,
   Track,
 } from "../app/utils/utils";
@@ -17,6 +18,8 @@ import {
   ArrowBigUpDash,
   ArrowBigDownDash
 } from "lucide-react";
+import { WebSocketContext } from "../app/Context/wsContext";
+import { useSession } from "next-auth/react";
 
 type sharedQueueProps = {
   streamerid: string;
@@ -27,6 +30,9 @@ export const SharedQeue = (props: sharedQueueProps) => {
   const [queue, setQueue] = useState<Track[]>([]);
   const [error, setError] = useState("");
 	const [streamerid,setstreamerid]=useState("")
+  const [link,setlink]=useState("");
+  const ws=useContext(WebSocketContext);
+  const  session=useSession();
 
   useEffect(()=>{
     fetch('http://localhost:3000/api/getstream?id='+hashedid,{
@@ -45,6 +51,7 @@ export const SharedQeue = (props: sharedQueueProps) => {
       })
       .catch((err) => console.log(err));
     },[])
+
   const handle = async (track: Track, choice: "up" | "down") => {
     try {
       await handlelistenerVote(streamerid,track.id, choice);
@@ -63,8 +70,11 @@ export const SharedQeue = (props: sharedQueueProps) => {
       console.log(error);
     }
   };
- 
-  
+ //const { streamUrl, streamId, userId } = message;
+  const send_add_stream_request=()=>{
+    ws?.current?.send(JSON.stringify({type:"addStream",streamUrl:link,streamId:hashedid,userId:session.data?.user.id}));  
+   setlink(""); 
+  }
   const sortedQueue =
     queue.length > 1
       ? [...queue].sort((a: Track, b: Track) => b.upvotes - a.upvotes)
@@ -83,6 +93,8 @@ export const SharedQeue = (props: sharedQueueProps) => {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px]">
+            <Input onChange={e=>setlink(e.target.value)} value={link}/>
+            <button onClick={send_add_stream_request}>Add a track to Queue</button>
             {queue.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <QueueIcon />
@@ -128,7 +140,6 @@ export const SharedQeue = (props: sharedQueueProps) => {
                                 : "text-gray-500"
                           }`}
                         >
-
                           {track.upvotes} votes
                         </span>
                         {track.addedBy && (
