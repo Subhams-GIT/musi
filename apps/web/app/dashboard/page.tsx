@@ -85,10 +85,10 @@ export default function StreamingDashboard() {
 
   async function getlink() {
     try {
-      if(!sessionStorage.getItem("invite-link")){
-        setShareLink(sessionStorage.getItem("invite-link")?? "")
-        return sessionStorage.getItem("invite-link");
-      }
+      // if(!sessionStorage.getItem("invite-link")){
+      //   setShareLink(sessionStorage.getItem("invite-link")?? "")
+      //   return sessionStorage.getItem("invite-link");
+      // }
       const res = await fetch("http://localhost:3000/api/dashboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -70,7 +70,7 @@ export const SharedQeue = (props: sharedQueueProps) => {
       console.log(error);
     }
   };
- //const { streamUrl, streamId, userId } = message;
+ 
   const send_add_stream_request=()=>{
     ws?.current?.send(JSON.stringify({type:"addStream",streamUrl:link,streamId:hashedid,userId:session.data?.user.id}));  
    setlink(""); 
