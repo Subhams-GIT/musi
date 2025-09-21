@@ -16,7 +16,7 @@ import { YouTubePlayer } from "react-youtube";
 const Player = dynamic(() => import("../../components/Player"));
 const Search = dynamic(() => import("../../components/Search"));
 const Queue = dynamic(() => import("../../components/Queue"));
-import { Share2Icon } from "lucide-react";
+import { LoaderCircle, Share2Icon } from "lucide-react";
 import { getsctive } from "../utils/GetActive";
 import { WebSocketContext } from "../Context/wsContext";
 
@@ -34,18 +34,29 @@ export default function StreamingDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [joined, setjoin] = useState(false);
   const [joinlink, setjoinlink] = useState("");
+  const [loading,setisloading]=useState(false);
 
-  useEffect(() => {
-    if (!session.data?.user) {
-      router.replace("/");
-      return;
-    }
-    getsctive(session.data?.user.id).then((data) => {
+  useEffect(()=>{
+    if(session.status==="authenticated"){
+    queue && getsctive(session.data?.user.id).then((data) => {
       if (data) {
         setQueue(data);
       }
     });
-  }, []);
+
+    setTimeout(() => {
+       if (!ws?.current) return;
+        console.log("WebSocket state:", ws?.current.readyState);
+        ws?.current?.addEventListener("message", handlemessage);
+        return ()=>{
+          ws?.current?.removeEventListener("message",handlemessage)
+        }
+    }, 1000);
+    }
+    else{
+      router.replace("/")
+    }
+  }, [session,ws]);
 
   const playNext = () => {
     if (queue.length === 0) {
@@ -58,37 +69,33 @@ export default function StreamingDashboard() {
       );
     }
   };
+
   const joinStream = () => {
     setjoin(true)
     // router.replace(`/share?h=${joinlink}`);
   }
 
-  const handlemessage = useCallback((event: MessageEvent) => {
+  const handlemessage =(event: MessageEvent) => {
     const { type, data } = JSON.parse(event.data);
     switch (type) {
       case "room created":
         console.log(data);
         break;
-      case "user joined":
-        console.log(data);
-        break;
-    }
-  }, []);
-
-  useEffect(() => {
-    setTimeout(() => {
-      if (!ws?.current) return;
-      console.log("WebSocket state:", ws?.current.readyState);
-      ws?.current?.addEventListener("message", handlemessage);
-    }, 1000);
-  }, [ws]);
-
+        case "user joined":
+          console.log(data);
+          break;
+        }
+      };
+      
+      
+      
+      if(session.status==="loading"){
+        return <LoaderCircle/>
+      }
   async function getlink() {
     try {
-      // if(!sessionStorage.getItem("invite-link")){
-      //   setShareLink(sessionStorage.getItem("invite-link")?? "")
-      //   return sessionStorage.getItem("invite-link");
-      // }
+      if(loading) return;
+      setisloading(true); 
       const res = await fetch("http://localhost:3000/api/dashboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,24 +112,14 @@ export default function StreamingDashboard() {
           token: session.data?.user.accessToken,
         }),
       );
-      // console.log(data.message.split("h=")[1]);
       console.log("after sending")
       setShareLink(data.message);
       setShowModal(true);
+      setisloading(false)
     } catch (err) {
       console.error("Error getting share link:", err);
     }
   }
-
-  useMemo(() => {
-    if (!currentTrack) return;
-    if (playerRef.current && currentTrack?.url) {
-      currentTrack.url.split("v=")[1];
-      if (isPlaying) {
-        playerRef.current.playVideo();
-      }
-    }
-  }, [currentTrack, playerRef, isPlaying]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -146,9 +143,10 @@ export default function StreamingDashboard() {
               size="icon"
               className="text-black w-fit px-1 py-1 mx-2"
               onClick={getlink}
+              disabled={loading}
             >
               <Share2Icon className="h-4 w-4 mx-1" />
-              Share
+              {loading?<LoaderCircle className="animate-spin"/>:"create Room"}
             </Button>
             <Button
               variant="outline"
@@ -197,15 +195,15 @@ export default function StreamingDashboard() {
               <button className="border -b px-2 py-1 bg-blue-500" onClick={() => {
                 router.replace(joinlink)
               }}>join stream</button>
-              <button onClick={() => setjoin(false)}>
-                close
+              <button onClick={() => setjoin(false)} className="px-2 py-1 rounded-full ">
+               close
               </button>
             </div>
           </div>
         )
       }
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-99">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-99"> 
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
             <h2 className="text-lg font-bold mb-4">Share this link</h2>
             <input

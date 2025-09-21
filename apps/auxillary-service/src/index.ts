@@ -71,14 +71,14 @@ wss.on("connection", (ws) => {
           const userId = message.userId;
           if (!roomId || !userId) throw new Error("Missing roomId or userId");
           try {
-            await manager.createRoom(roomId, userId, ws);
+           await manager.createRoom(roomId, userId, ws);
             console.log(`${userId} created room ${roomId}`);
-            ws.send(JSON.stringify({ type: "room created", roomId }));
+           ws.send(JSON.stringify({ type: "room created", roomId }));
           } catch (err) {
             console.error("createRoom error:", err);
           }
-          break;
         }
+        break;
 
         case "joinRoom": {
           const roomId = message.roomId;
@@ -86,8 +86,8 @@ wss.on("connection", (ws) => {
           console.log(`Join room request: roomId=${roomId}, userId=${joinerId}`);
           if (!roomId || !joinerId) throw new Error("Missing roomId or userId");
           try {
-            const data = await manager.joinRoom(roomId, joinerId, ws);
-            broadcast({
+           const data = await manager.joinRoom(roomId, joinerId, ws);
+           broadcast({
               type: "user joined",
               user: data.userId,
               roomId,
@@ -96,22 +96,22 @@ wss.on("connection", (ws) => {
           } catch (err) {
             console.error("joinRoom error:", err);
           }
-          break;
         }
+        break;
 
-        case "vote": {
+        case "vote": {  
           const { streamId, userId, choice } = message;
           if (streamId && userId && choice !== undefined) {
             try {
               
-              manager.vote(streamId, userId, choice).catch(console.error);
+             // manager.vote(streamId, userId, choice).catch(console.error);
               
             } catch (error) {
               console.error(error)
             }
           }
-          break;
         }
+        break;
 
         case "addStream": {
           const { streamUrl, streamId, userId } = message;
@@ -128,8 +128,8 @@ wss.on("connection", (ws) => {
               console.error(e)
             }
           }
-          break;
         }
+        break;
         default:
           console.log("Unknown message type:", message.type);
       }

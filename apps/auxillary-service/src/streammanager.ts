@@ -111,9 +111,11 @@ async joinRoom(roomId: string, userId: string, ws: WebSocket) {
     const redis = await this.getRedisClient();
 
     let membersJson = await redis.get(roomId);
+    console.log(membersJson);
     let members = membersJson ? JSON.parse(membersJson) : [];
-
-    const userExists = members.some((member: User) => member.userId === userId);
+    console.log(members);
+    const userExists = members.find((member: User) => member.userId === userId);
+    console.log(userExists);
     if (userExists) {
       throw new Error("User already in the room");
     }
@@ -122,7 +124,7 @@ async joinRoom(roomId: string, userId: string, ws: WebSocket) {
     const newUser: User = { userId, admin: false };
     members.push(newUser);
 
-   
+   console.log(members);
     await redis.set(roomId, JSON.stringify(members));
 
    
@@ -142,12 +144,18 @@ async createRoom(roomId: string, userId: string, ws: WebSocket) {
   try {
     const redis = await this.getRedisClient();
     const exists = await redis.exists(roomId);
+    const info=await redis.info();
+    console.log(info);
+    console.log(roomId);
     if (exists) {
-      throw new Error("Room already exists");
+      console.log(exists)
+    //throw new Error("Room already exists");
+      return {type:"room created",roomId};
     }
 
     const newRoom: User[] = [{ userId, admin: true }];
-    await redis.set(roomId, JSON.stringify(newRoom));
+    console.log(newRoom);
+      await redis.set(roomId, JSON.stringify(newRoom));
 
     this.roomSockets.set(roomId, [ws]);
 

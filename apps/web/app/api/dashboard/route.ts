@@ -10,7 +10,6 @@ export  async function POST(req: NextRequest) {
 	const id=re.id;
 	try {
 		const res = await createShareLink(id,"");
-		
 		return NextResponse.json({
 			message:res
 		})

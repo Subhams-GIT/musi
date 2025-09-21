@@ -16,6 +16,7 @@ import {
   TabsContent,
   ScrollArea,
 } from "../app/utils/utils";
+import useSession,{sessionData} from "nextauth/react";
 import { useEffect, useState } from "react";
 import { Avatar } from "../app/utils/utils";
 import { PlusIcon } from "lucide-react";
@@ -31,7 +32,14 @@ const Search = ({ queue, setQueue, session, sortBy, setSortBy }: any) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [originaltracks, setoriginal] = useState<Track[]>([]);
   const [error, setError] = useState<String>("");
-
+  //const session=useSession()
+  const {data:sessionData,status}=session;
+  useEffect(()=>{
+    if(session.status==="unauthenticated") {
+    router.replace("/")
+    return ;
+    }
+  },[status,router])
   const addTrackFromUrl = async () => {
     if (!urlInput.trim()) return;
 

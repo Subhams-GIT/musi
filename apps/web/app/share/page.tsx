@@ -112,6 +112,7 @@ export default function Page() {
       console.log("WebSocket state:", ws?.current.readyState);
       ws?.current?.addEventListener("message", handleMessage);
       ws.current.send(JSON.stringify({type: "sync"}));
+      console.log(session.data?.user.id)
       ws.current.send(JSON.stringify({type: "joinRoom", roomId:hashedId,userId:session.data?.user.id}));
     }, 1000);
    

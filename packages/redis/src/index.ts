@@ -18,12 +18,12 @@ export async function createShareLink(
   const redis = await getRedisClient();
 
   // If a hash was provided, treat it as a lookup
-  if (hashed.trim() !== "") {
-    const exists = await redis.exists(hashed);
+  if (userId.trim() !== "") {
+    const exists = await redis.exists(userId);
     if (!exists) {
       throw new Error("User not found. Check the link and try again!");
     }
-    const result = await redis.get(hashed);
+    const result = await redis.get(userId);
     return result ?? "";
   }
 
@@ -35,7 +35,7 @@ export async function createShareLink(
   const hash = crypto.randomBytes(6).toString("hex");
 
   // Store plain string userId for easier retrieval
-  await redis.set(hash, userId, { EX: 60 * 60 * 24 }); // 24 hours
+//  await redis.set(userId, hash, { EX: 60 * 60 * 24 }); // 24 hours
 
   return `http://localhost:3000/share?h=${hash}`;
 }
