@@ -1,10 +1,11 @@
 'use client'
-
 import React from "react"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
-import { CircleCheck, Grip, Music, Sun, TicketPlus } from 'lucide-react'
+import { AppleIcon, CircleCheck, Grip, Music, Sun} from 'lucide-react'
 import { AudioLines } from 'lucide-react';
+import { YoutubeIcon } from "../utils/icons"
+// import { YoutubeIcon } from "../app/utils/icons"
 
 const features = [
     {
@@ -41,13 +42,13 @@ const testimonials = [
     company: "Apple Music",
     metric: "300% increase",
     description: "in engagement",
-    logo: "🍎",
+    logo: <AppleIcon/>,
   },
   {
     company: "YouTube Music",
     metric: "5x more",
     description: "collaborative sessions",
-    logo: "📺",
+    logo: <YoutubeIcon />,
   },
 ]
 
@@ -57,7 +58,7 @@ export default function landing(): React.JSX.Element {
             <div className="flex items-center gap-3  p-3 text-white text-md md:text-lg"><AudioLines />StreamSync</div>
             <div className="flex items-center gap-3 mx-3 text-white text-sm md:text-md">
                 <button className="cursor-pointer"><Sun /></button>
-                <button className=" cursor-pointer bg-black text-white rounded-md px-2 py-1 border-1 border-grey"> Dashboard</button>
+                <button className=" cursor-pointer bg-black text-white rounded-md px-2 py-1 border-1 border-grey" onClick={()=>signIn()}> Dashboard</button>
                 <button className="bg-white text-black cursor-pointer rounded-md px-2 py-1 border-1 border-transparent"> Get Started</button>
             </div>
         </header>
