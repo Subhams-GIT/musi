@@ -22,6 +22,11 @@ export type Spaces = {
 	hostId: String
 	hostName: String
 	isActive: Boolean
+	currentStream?:String
+	joinees?:number
+	myvotes?:number
+	mysongs?:number
+	hosted?:boolean
 }
 
 export type UserStatus = {
@@ -32,4 +37,8 @@ export type UserStatus = {
 
 export type History = {
 	spaces: Spaces[]
+}
+
+export type Hosted={
+	spaces:Spaces[]
 }

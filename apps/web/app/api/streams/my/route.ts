@@ -20,7 +20,8 @@ type Streams={
 		name:string | null
 	  }
 }
-export async function GET():Promise<Streams[] | any> {
+
+export async function GET():Promise<any[] | any> {
 	const session = await getServerSession(authOptions);
 	console.log(session?.user.id, "session user id");
 	if(!session?.user?.id){
@@ -31,25 +32,18 @@ export async function GET():Promise<Streams[] | any> {
 		});
 	}
 	try {
-		const streams = await prisma.stream.findMany({
+		const spaces = await prisma.space.findMany({
 		where: {
-			userId:session?.user.id ?? ""
+			hostId: session.user.id
 		},
-		include: {
-			user: {
-				select: {
-					id:true,
-					name:true,
-				},
-			},
-		},
-		orderBy: {
-			upvotes: 'desc'
+		select: {
+			id: true
 		}
-	})
+	});
 
+	
 	return NextResponse.json({
-		streams
+		spaces
 	})	
 } catch (error) {
 	console.error(error);
