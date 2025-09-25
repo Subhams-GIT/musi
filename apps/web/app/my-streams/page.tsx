@@ -1,10 +1,12 @@
 'use client'
 import { Crown, CrownIcon, LeafyGreenIcon, Pause, Play, Search, UserCheck, Users } from "lucide-react"
-import SideBar from "../../Components/SideBar"
+import SideBar, { Mobile_sidebar } from "../../Components/SideBar"
 import { Button } from "../../utils/utils"
 import { Hosted } from "../../utils/types"
 import { useState } from "react"
+import NavBar from "../../Components/NavBar"
 export default function Page() {
+    const [open, setopen] = useState(false)
     const [allStreams, setallStreams] = useState<Hosted>({
         spaces: [
             {
@@ -18,7 +20,7 @@ export default function Page() {
                 joinees: 5,
                 myvotes: 10,
                 mysongs: 2,
-                hosted:true,
+                hosted: true,
             },
             {
                 id: "5",
@@ -31,7 +33,7 @@ export default function Page() {
                 joinees: 5,
                 myvotes: 10,
                 mysongs: 2,
-                hosted:true,
+                hosted: true,
             },
             {
                 id: "1",
@@ -44,7 +46,7 @@ export default function Page() {
                 joinees: 5,
                 myvotes: 10,
                 mysongs: 2,
-                hosted:false,
+                hosted: false,
             },
             {
                 id: "3",
@@ -57,18 +59,20 @@ export default function Page() {
                 joinees: 5,
                 myvotes: 10,
                 mysongs: 2,
-                hosted:false,
+                hosted: false,
             }
         ]
     })
-    const [activeTab,setActivetab]=useState<string>("Hosted");
-    <div className="flex h-screen w-screen overflow-hidden">
+    const [activeTab, setActivetab] = useState<string>("Hosted");
+
+    return <div className="flex h-screen w-screen overflow-hidden">
         {/* Make sidebar fixed and full height */}
-        <div className="h-screen w-[240px] fixed left-0 top-0 z-10">
-            <SideBar />
+        <div className="h-screen fixed left-0 top-0 z-10">
+            {open && <NavBar setopen={setopen} open={open} />}
+            {open && <Mobile_sidebar setmopen={setopen} mobopen={open} />}
         </div>
         {/* Main content with left margin to accommodate sidebar */}
-        <div className="bg-black flex-1 flex flex-col h-screen ml-[240px] overflow-y-auto">
+        <div className="bg-black flex-1 flex flex-col h-screen  overflow-y-auto">
             {/* header */}
             <section className="flex justify-between items-center w-full p-4 mt-4">
                 <section className="flex  flex-col justify-center items-start gap-1 ">
@@ -93,11 +97,11 @@ export default function Page() {
             <section className="w-full flex items-center justify-center my-5">
                 <section className="flex w-[70%] bg-neutral-800 text-white justify-between items-center px-2 py-1 gap-5 rounded-md  ">
 
-                    <button name="Hosted" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab==="Hosted"?"black":"bg-gray-500"}`} onClick={()=>setActivetab("Hosted")}><Crown/> Hosted</button>
+                    <button name="Hosted" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Hosted" ? "black" : "bg-gray-500"}`} onClick={() => setActivetab("Hosted")}><Crown /> Hosted</button>
 
-                <button name="Joined" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab==="Joined"?"black":"bg-gray-500"}`} onClick={()=>setActivetab("Joined")}> <UserCheck /> Joined</button> 
+                    <button name="Joined" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Joined" ? "black" : "bg-gray-500"}`} onClick={() => setActivetab("Joined")}> <UserCheck /> Joined</button>
                 </section>
-               
+
             </section>
 
             {/* tabs info show */}
@@ -119,15 +123,15 @@ export default function Page() {
 
                                 <section className="flex flex-col  w-full bg-neutral-700 rounded-md p-2 items-start gap-2 text-white">
                                     <section className="flex justify-center items-center gap-2 ">
-                                      {space.isActive?  <span className="h-1 w-1 rounded-full animate-ping bg-green-500"/>:<Pause className="h-3 w-3"/>}
-                                    <span className="text-sm">{space.isActive ? "NOW PLAYING" : "PAUSED"}</span>
+                                        {space.isActive ? <span className="h-1 w-1 rounded-full animate-ping bg-green-500" /> : <Pause className="h-3 w-3" />}
+                                        <span className="text-sm">{space.isActive ? "NOW PLAYING" : "PAUSED"}</span>
                                     </section>
-                                    
+
                                     {space.name}
                                 </section>
 
                                 <section className="grid grid-cols-2 grid-rows-2">
-                                    <Users className="h-3 w-3 text-white"/> {space.joinees}
+                                    <Users className="h-3 w-3 text-white" /> {space.joinees}
                                 </section>
                             </div>
                         ))

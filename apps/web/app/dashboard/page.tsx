@@ -2,10 +2,11 @@
 import { MenuIcon, Music, Play,  Plus, Sidebar, } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserStatus, Spaces } from "../../utils/types";
-import SideBar from "../../Components/SideBar";
+import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
 import NavBar from "../../Components/NavBar";
+import { useSegmentState } from "next/dist/next-devtools/userspace/app/segment-explorer-node";
 export default function page() {
-
+    const [open,setopen]=useState(false)
     const [userStatus, setUserStatus] = useState<UserStatus>({
         "total Streams Done": 120,
         "total Participants": 340,
@@ -43,8 +44,8 @@ export default function page() {
 
     if(windowsize<768){
         return <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
-            <NavBar/>
-
+            <NavBar setopen={setopen} open={open}/>
+            {open && <Mobile_sidebar setmopen={setopen} mobopen={open}/>}
         {/*user stats*/}
 
         <div className="flex flex-col justify-between items-between">

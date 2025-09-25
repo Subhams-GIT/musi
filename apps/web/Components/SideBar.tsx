@@ -1,9 +1,15 @@
 'use client'
-import { ChevronLeft, ChevronRight,Crown,HomeIcon, Music, Plus, Settings, Sun, Users } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Crown, HomeIcon, Music, Play, Plus, Settings, Sun, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import '../app/globals.css'
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+
+type sidebarprops = {
+    mobopen: boolean,
+    setmopen: (value:boolean) => void
+}
+
 export default function SideBar() {
     const [open, setopen] = useState(false);
     const router=useRouter();
@@ -40,6 +46,64 @@ export default function SideBar() {
                 </button>
                 <button className={`flex justify-center items-center ${open ? "w-[70%] px-8" : ""} ${open ? "bg-blue-600" : ""} gap-3 rounded-lg  py-2 mx-8 text-sm`}>
                     <Settings /> {open ? "Settings" : ""}
+                </button>
+            </div>
+            <button className="h-10 w-full text-center p-auto flex justify-center items-end">
+                <Sun />
+            </button>
+        </motion.div>
+    );
+}
+
+export function Mobile_sidebar({ mobopen,setmopen }: sidebarprops){
+    const router = useRouter();
+    // Prevent background scroll when sidebar is open
+    useEffect(() => {
+        if (mobopen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [mobopen]);
+
+    return (
+        <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: mobopen ? 220 : 0, opacity: mobopen ? 1 : 0 }}
+            transition={{ duration: 0.3, type: "keyframes" }}
+            className={`fixed top-0 left-0 bottom-0 flex flex-col items-center justify-start gap-10 bg-zinc-900 text-white min-h-full z-[9999] transition-all ${mobopen ? "pointer-events-auto" : "pointer-events-none"}`}
+            style={{ boxShadow: mobopen ? "2px 0 8px rgba(0,0,0,0.2)" : "none" }}
+        >
+            <button
+                className="max-h-fit py-5 pt-10 px-5 flex justify-center items-center border-gray-400 w-full border-b-gray-600 border-b-1"
+                onClick={() => setmopen(false)}
+            >
+                <ChevronLeft className="text-right" />
+            </button>
+            <div className="h-[70vh] w-full flex flex-col justify-start items-center gap-y-5 text-md border-b-gray-600 border-b-1 transition-all duration-300">
+                <button className={`w-[70%] px-8 flex justify-center items-center bg-blue-600 gap-x-3 rounded-lg py-2 mx-8 text-sm`}>
+                    <HomeIcon /> Home
+                </button>
+                <button
+                    className={`text-white flex justify-center items-center w-[70%] px-8 bg-blue-600 gap-3 rounded-lg py-2 mx-8 text-sm`}
+                    onClick={() => router.replace('/my-streams')}
+                >
+                    <Crown /> Crown
+                </button>
+                <button className={`flex justify-center items-center w-[70%] px-8 bg-blue-600 gap-3 rounded-lg py-2 mx-8 text-sm`}>
+                    <Plus /> Plus
+                </button>
+                <button className={`flex justify-center items-center w-[70%] px-8 bg-blue-600 gap-3 rounded-lg py-2 mx-8 text-sm`}>
+                    <Music /> Music
+                </button>
+                <button className={`flex justify-center items-center w-[70%] px-8 bg-blue-600 gap-3 rounded-lg py-2 mx-8 text-sm`}>
+                    <Users /> Users
+                </button>
+                <button className={`flex justify-center items-center w-[70%] px-8 bg-blue-600 gap-3 rounded-lg py-2 mx-8 text-sm`}>
+                    <Settings /> Settings
                 </button>
             </div>
             <button className="h-10 w-full text-center p-auto flex justify-center items-end">
