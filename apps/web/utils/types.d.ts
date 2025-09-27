@@ -27,6 +27,7 @@ export type Spaces = {
 	myvotes?:number
 	mysongs?:number
 	hosted?:boolean
+	totalStreamTime:number
 }
 
 export type UserStatus = {

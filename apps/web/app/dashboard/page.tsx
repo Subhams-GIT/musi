@@ -1,10 +1,11 @@
 'use client'
-import { MenuIcon, Music, Play,  Plus, Sidebar, } from "lucide-react";
+import { Music, Play,  Plus, } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserStatus, Spaces } from "../../utils/types";
 import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
 import NavBar from "../../Components/NavBar";
-import { useSegmentState } from "next/dist/next-devtools/userspace/app/segment-explorer-node";
+import useWindow from "../../hooks/window-hook";
+
 export default function page() {
     const [open,setopen]=useState(false)
     const [userStatus, setUserStatus] = useState<UserStatus>({
@@ -20,7 +21,8 @@ export default function page() {
             streams: [],
             hostId: "u1",
             hostName: "Alice",
-            isActive: false
+            isActive: false,
+            totalStreamTime:0
         },
         {
             id: "2",
@@ -28,23 +30,24 @@ export default function page() {
             streams: [],
             hostId: "u2",
             hostName: "Bob",
-            isActive: false
+            isActive: false,
+            totalStreamTime:0
         }
     ]);
 
-    const [windowsize, setwindowsize] = useState(768);
-    useEffect(() => {
-        const handleResize = () => {
-            setwindowsize(window.innerWidth);
-        }
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, [windowsize]);
+    const windowsize= useWindow();
+    // useEffect(() => {
+    //     const handleResize = () => {
+    //         setwindowsize(window.innerWidth);
+    //     }
+    //     window.addEventListener('resize', handleResize);
+    //     return () => window.removeEventListener('resize', handleResize);
+    // }, [windowsize]);
 
 
     if(windowsize<768){
         return <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
-            <NavBar setopen={setopen} open={open}/>
+            <NavBar setopen={setopen} open={open} title="Stream Sync"/>
             {open && <Mobile_sidebar setmopen={setopen} mobopen={open}/>}
         {/*user stats*/}
 
@@ -139,7 +142,7 @@ export default function page() {
                                     <span className="text-gray-400">{space.hostName}</span>
                                     <span className="text-gray-400">{"status: " + (space.isActive ? "Active" : "Inactive")}</span>
                                 </section>
-
+                                        
                             </section>
 
                         </div>
