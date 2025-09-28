@@ -16,6 +16,7 @@ model User {
   name     String?
   addedStreams Stream[] @relation("addedBy")
   hostedSpaces  Space[]  @relation("hostedBy")
+   joinedSpaces  Space[]  @relation("spaceParticipants")
   upvote   Upvote[]
   Stream   Stream[]
 }
@@ -54,11 +55,14 @@ model CurrentStream {
 model Space {
   id            String         @id @default(uuid())
   name          String
+  description   String
   streams       Stream[]       @relation("spaceStreams")
   hostId        String
   host          User           @relation("hostedBy", fields: [hostId], references: [id])
   isActive      Boolean        @default(true)
   currentStream CurrentStream?
+  joineeId      String?    
+  participants  User[]         @relation("spaceParticipants") // ✅ same name as in User
 }
 
 model Upvote {
