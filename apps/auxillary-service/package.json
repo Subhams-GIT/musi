@@ -16,6 +16,7 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "@repo/redis": "workspace:*",
+    "axios": "^1.12.2",
     "bullmq": "^5.58.5",
     "cluster": "^0.7.7",
     "redis": "^5.8.1",

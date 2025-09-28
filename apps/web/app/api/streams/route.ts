@@ -4,20 +4,7 @@ import { z } from 'zod' // doubt
 import youtubesearchapi from 'youtube-search-api';
 import { getServerSession } from "next-auth";
 import authOptions from "../../lib/auth";
-type userStreams = {
-	id: string
-	type: "Youtube" | "Spotify"
-	active: boolean
-	upvotes: number
-	userId: string
-	extractedId: string
-	url: string
-	largeThumbnail: string
-	smallThumbnail: string
-	title: string,
-	spaceId:string,
-	haveUpvoted?: boolean
-}
+
 const YT_REGEX = new RegExp(/^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/)
 const CreateStreamSchema = z.object({
 	creatorId: z.string(),
@@ -28,7 +15,7 @@ const CreateStreamSchema = z.object({
 
 export async function POST(req: NextRequest):Promise<any> {
 	const session = await getServerSession(authOptions);
-	// console.log(session, "session user id");
+	
 	try {
 		if (!session?.user.id) {
 			return NextResponse.json({
@@ -37,6 +24,7 @@ export async function POST(req: NextRequest):Promise<any> {
 				status: 401
 			});
 		}
+
 		const user = session.user;
 		const data = CreateStreamSchema.parse(await req.json());
 		const isYT = YT_REGEX.test(data.url)
@@ -117,6 +105,8 @@ export async function POST(req: NextRequest):Promise<any> {
 				);
 			}
 		}
+
+		
 		thumbnails.sort((a: { url: string, width: number, height: number }, b: { url: string, width: number, height: number }) => a.width < b.width ? -1 : 1);
 		const existingActiveStreams = await prisma.stream.count({
 			where: {
@@ -225,7 +215,7 @@ export async function GET(req: NextRequest):Promise<any> {
 	},
 	
 }),
-  prisma.currentStream.findFirst({
+  await prisma.currentStream.findFirst({
       where: {
           spaceId: spaceId
       },

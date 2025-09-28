@@ -1,19 +1,26 @@
 'use client'
-import { Music, Play,  Plus, } from "lucide-react";
+import { LogOutIcon, Music, Play,  Plus, } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserStatus, Spaces } from "../../utils/types";
 import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
 import NavBar from "../../Components/NavBar";
 import useWindow from "../../hooks/window-hook";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function page() {
+    const session=useSession();
     const [open,setopen]=useState(false)
     const [userStatus, setUserStatus] = useState<UserStatus>({
         "total Streams Done": 120,
         "total Participants": 340,
         "total Streams Attended": 89
     });
-
+    const router=useRouter();
+    useEffect(()=>{
+        if(!session.data?.user.id) router.replace('/'); 
+    },[])
+    console.log(session.data?.user)
     const [history, sethistory] = useState<Spaces[]>([
         {
             id: "1",
@@ -36,14 +43,6 @@ export default function page() {
     ]);
 
     const windowsize= useWindow();
-    // useEffect(() => {
-    //     const handleResize = () => {
-    //         setwindowsize(window.innerWidth);
-    //     }
-    //     window.addEventListener('resize', handleResize);
-    //     return () => window.removeEventListener('resize', handleResize);
-    // }, [windowsize]);
-
 
     if(windowsize<768){
         return <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
@@ -102,7 +101,13 @@ export default function page() {
         <SideBar />  <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
         <nav className="flex justify-between items-center border-b border-gray-700 pb-4 static">
             <section className="flex gap-x-1 "><Music /> StreamSync</section>
-            <button className=" w-fit text-sm md:text-md flex items-center cursor-pointer  bg-white rounded-md px-1 py-1 md:px-4  text-black"><Plus className="h-4 w-4 mr-2" />Create </button>
+            <button
+                className=" w-fit text-sm md:text-md flex items-center cursor-pointer  bg-white rounded-md px-1 py-1 md:px-4  text-black"
+                onClick={() => signOut()}
+            >
+                <LogOutIcon className="h-4 w-4 mr-2" />
+                SignOut
+            </button>
         </nav>
 
         {/*user stats*/}

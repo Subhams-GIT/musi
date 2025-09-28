@@ -15,7 +15,7 @@ export default function SideBar() {
 
     const handleTabClick = (tab: string, route: string) => {
         setSelectedTab(tab);
-        router.replace(route);
+        router.replace(`/${route}`)
     };
     const [open, setopen] = useState(false);
     const router = useRouter();
@@ -37,12 +37,12 @@ export default function SideBar() {
             className={`h-screen relative flex flex-col items-center justify-between gap-10 bg-zinc-900 text-white min-h-full ${open ? "z-50" : "z-30"} transition-all`}
         >
             <button
-                className="max-h-fit py-5 pt-10 px-5 flex  justify-center items-center border-gray-400 w-full border-b border-b-gray-600"
+                className="max-h-fit py-5 pt-10 px-5 flex  justify-center items-center border-gray-400 w-full "
                 onClick={() => setopen(!open)}
             >
                 {open ? <ChevronLeft className="text-right" /> : <ChevronRight />}
             </button>
-            <div className={` h-[70vh] w-full flex flex-col justify-start items-center gap-y-5 text-md transition-all duration-300`}>
+            <div className={` h-[70vh] w-full flex flex-col justify-center items-center gap-y-5 text-md transition-all duration-300`}>
                 <button
                     id="home"
                     onClick={() => handleTabClick('home', 'dashboard')}
@@ -66,7 +66,7 @@ export default function SideBar() {
                 </button>
 
             </div>
-            <button className="h-full w-full text-center flex justify-center items-center gap-x-2 py-2 border-t border-gray-700">
+            <button className="h-full w-full text-center flex justify-center items-end gap-x-2 py-2">
                 <Sun /> <span className="text-sm">{open ? "Theme" : ""}</span>
             </button>
         </motion.div>

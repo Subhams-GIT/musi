@@ -66,32 +66,13 @@ wss.on("connection", (ws) => {
           );
           break;
 
-        case "createRoom": {
-          const roomId = message.roomId;
-          const userId = message.userId;
-          if (!roomId || !userId) throw new Error("Missing roomId or userId");
-          try {
-           await manager.createRoom(roomId, userId, ws);
-            console.log(`${userId} created room ${roomId}`);
-           ws.send(JSON.stringify({ type: "room created", roomId }));
-          } catch (err) {
-            console.error("createRoom error:", err);
-          }
-        }
-        break;
-
         case "joinRoom": {
           const roomId = message.roomId;
           const joinerId = message.userId;
           console.log(`Join room request: roomId=${roomId}, userId=${joinerId}`);
-          if (!roomId || !joinerId) throw new Error("Missing roomId or userId");
+          if (!roomId ) throw new Error("Missing roomId or userId");
           try {
-           const data = await manager.joinRoom(roomId, joinerId, ws);
-           broadcast({
-              type: "user joined",
-              user: data.userId,
-              roomId,
-            });
+           const data = await manager.joinRoom(roomId);
             console.log(`${joinerId} joined room ${roomId}`);
           } catch (err) {
             console.error("joinRoom error:", err);
@@ -113,23 +94,23 @@ wss.on("connection", (ws) => {
         }
         break;
 
-        case "addStream": {
-          const { streamUrl, streamId, userId } = message;
-          if (streamUrl && streamId && userId) {
-            try{
-              const res=await manager.addStream(streamUrl, streamId, userId);
-              broadcast({
-                type:"added stream",
-                res,
-                userId
-              })
-            }
-            catch(e){
-              console.error(e)
-            }
-          }
-        }
-        break;
+        // case "addStream": {
+        //   const { streamUrl, streamId, userId } = message;
+        //   if (streamUrl && streamId && userId) {
+        //     try{
+        //       const res=await manager.addStream(streamUrl, streamId, userId);
+        //       broadcast({
+        //         type:"added stream",
+        //         res,
+        //         userId
+        //       })
+        //     }
+        //     catch(e){
+        //       console.error(e)
+        //     }
+        //   }
+        // }
+        // break;
         default:
           console.log("Unknown message type:", message.type);
       }

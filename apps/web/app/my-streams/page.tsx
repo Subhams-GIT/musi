@@ -149,7 +149,7 @@ export default function Page() {
 
                         <button name="Hosted" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Hosted" ? "black" : "bg-gray-500"}`} onClick={() => setActivetab("Hosted")}><Crown /> Hosted</button>
 
-                        <button name="Joined" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Joined" ? "black" : "bg-gray-500"}`} onClick={() => setActivetab("Joined")}> <UserCheck /> Joined</button>
+                        <button name="Joined" className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Joined" ? "black" : "bg-gray-500"}`} onClick={() => setActivetab("Joined")}> <UserCheck /> Participated</button>
                     </section>
                 </section>
 
@@ -205,10 +205,10 @@ export default function Page() {
                                     </section>
 
                                     <section className="w-full flex justify-between  items-center">
-                                        <button className=" w-[70%] flex justify-center items-center px-3 py-2  gap-6 bg-white text-black rounded-xl  "><Settings /> Manage</button>
+                                        <button className=" w-[70%] flex justify-center items-center px-3 py-2  gap-6 bg-white text-black rounded-xl  ">Join</button>
                                         <section className="flex justify-around items-center gap-2 ">
                                             <button className="px-2 py-1 border border-neutral-700 rounded-md text-white text-sm"><Share2 /></button>
-                                            <button className="px-2 py-1  border border-neutral-700 rounded-md text-white text-sm"><Edit /></button>
+                                            {/* <button className="px-2 py-1  border border-neutral-700 rounded-md text-white text-sm"><Edit /></button> */}
                                         </section>
 
                                     </section>

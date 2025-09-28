@@ -4,6 +4,8 @@ import type { PrismaClient } from "@repo/db";
 import type { WebSocket } from "ws";
 import { checkforurl } from "./util.js";
 import youtubesearchapi from 'youtube-search-api';
+import axios from "axios";
+import { wss } from "./index.js";
 
 
 type User = {
@@ -19,7 +21,7 @@ const connection = {
 
 export class streamManager {
   private static instance: streamManager;
- 
+
   public prisma!: PrismaClient;
   public redisClient?: RedisClientType;
   public queue: Queue;
@@ -30,8 +32,8 @@ export class streamManager {
 
     this.worker = new Worker(
       "stream-queue",
-    async (job:Job)=>this.processJob(job),
-    {connection}
+      async (job: Job) => this.processJob(job),
+      { connection }
     );
 
     this.worker.on("completed", (job: Job) => {
@@ -52,14 +54,14 @@ export class streamManager {
 
   private async getPrisma(): Promise<PrismaClient> {
     if (!this.prisma) {
-     
+
       const { default: prisma } = await import("@repo/db");
       this.prisma = prisma;
     }
     return this.prisma;
   }
 
-  
+
   private async getRedisClient(): Promise<RedisClientType> {
     if (!this.redisClient || !this.redisClient.isOpen) {
       if (this.redisClient && this.redisClient.isOpen) {
@@ -82,158 +84,59 @@ export class streamManager {
   }
 
 
-  async processJob(job: Job){
+  async processJob(job: Job) {
     const { data, name } = job;
     switch (name) {
       case "createRoom":
-        
-        await this.createRoom(data.roomId, data.userId, data.ws);
+        await this.createRoom(data.roomname, data.description, data.userId);
         break;
       case "joinRoom":
-        await this.joinRoom(data.roomId, data.userId, data.ws);
+        await this.joinRoom(data.roomId);
         break;
-      case "vote":
-        await this.vote(data.streamId, data.vote, data.userId);
+        // case "vote":
+        //   await this.vote(data.streamId, data.vote, data.userId);
+        //   break;
+        // case "addStream":
+        //   await this.addStream(data.streamUrl, data.userId, data.roomId);
+        //   break;
+        // case "removeStream":
+        //   await this.removeStream(data.streamId, data.userId);
         break;
-      case "addStream":
-       
-        await this.addStream(data.streamUrl, data.userId, data.roomId);
-        break;
-      case "removeStream":
-        await this.removeStream(data.streamId, data.userId);
-        break;
     }
   }
 
- 
-async joinRoom(roomId: string, userId: string, ws: WebSocket) {
-  try {
-    const redis = await this.getRedisClient();
-
-    let membersJson = await redis.get(roomId);
-    console.log(membersJson);
-    let members = membersJson ? JSON.parse(membersJson) : [];
-    console.log(members);
-    const userExists = members.find((member: User) => member.userId === userId);
-    console.log(userExists);
-    if (userExists) {
-      throw new Error("User already in the room");
+  async createRoom(roomname: string, description: string, userID: string) {
+    if (!roomname || !description || !userID) {
+      return new Error('pls provide all details')
     }
-
-    
-    const newUser: User = { userId, admin: false };
-    members.push(newUser);
-
-   console.log(members);
-    await redis.set(roomId, JSON.stringify(members));
-
-   
-    if (!this.roomSockets.has(roomId)) {
-      this.roomSockets.set(roomId, []);
-    }
-    this.roomSockets.get(roomId)!.push(ws);
-
-    return { type: "joined stream", roomId, userId };
-  } catch (e) {
-    throw new Error(`Failed to join room ${e}`);
-  }
-}
-
-
-async createRoom(roomId: string, userId: string, ws: WebSocket) {
-  try {
-    const redis = await this.getRedisClient();
-    const exists = await redis.exists(roomId);
-    const info=await redis.info();
-    console.log(info);
-    console.log(roomId);
-    if (exists) {
-      console.log(exists)
-    //throw new Error("Room already exists");
-      return {type:"room created",roomId};
-    }
-
-    const newRoom: User[] = [{ userId, admin: true }];
-    console.log(newRoom);
-      await redis.set(roomId, JSON.stringify(newRoom));
-
-    this.roomSockets.set(roomId, [ws]);
-
-    return { type: "room created", roomId };
-  } catch (error) {
-    throw new Error(`Failed to create room${error}`);
-  }
-}
-
-async addStream(streamUrl: string, userId: string, roomId: string) {
-  if (!checkforurl(streamUrl)) {
-    throw new Error("Stream URL not correct!");
-  }
-  try {
-    const redis = await this.getRedisClient();
-
-    let membersJson = await redis.get(roomId);
-    if (!membersJson) {
-      throw new Error("Room does not exist");
-    }
-    
-    let members = JSON.parse(membersJson);
-
-    const userIsMember = members.some((member: User) => member.userId === userId);
-    if (!userIsMember) {
-      throw new Error("You are not a member of this room.");
-    }
-
-    const res = await youtubesearchapi.GetVideoDetails(streamUrl);
-    return { type: "song added in stream", res };
-  } catch (error) {
-    console.error(error);
-    throw new Error('Cannot add stream');
-  }
-}
-
-  
-  async vote(streamId: string, vote: "up" | "down", userId: string) {
     try {
-      const redis = await this.getRedisClient();
-      const userExistsInRedis = await redis.exists(userId);
-      if (!userExistsInRedis) {
- 
-        throw new Error("User not found in the room.");
-      }
+      await axios.post('http://localhost:3000/api/spaces', {
+        spaceName: roomname,
+        description
+      })
 
-      const prisma = await this.getPrisma();
-      const user = await this.prisma.user.findFirst({ where: { id: userId } });
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      return { type: "voted", vote, user, streamId };
-    } catch (e) {
-      console.error(e);
-      throw e; 
+    } catch (error) {
+      console.error(error)
+      return new Error('cannot create space');
     }
   }
 
-
-  async removeStream(streamId: string, userId: string) {
-    try {
-      const redis = await this.getRedisClient();
-      const userExistsInRedis = await redis.exists(userId); 
-      if (!userExistsInRedis) {
-        throw new Error("User not found in redis");
-      }
-
-      const prisma = await this.getPrisma();
-      const user = await prisma.user.findFirst({ where: { id: userId } });
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      return { type: "removestream", streamId, user };
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+  async joinRoom(id: string) {
+  if (!id) {
+    return new Error("Please provide all details");
   }
+
+  try {
+    const res = await axios.post(`http://localhost:3000/api/spaces/join?id=${id}`,);
+    wss.clients.forEach(client => {
+      client.send(JSON.stringify({
+        type: "user joined",
+        joinee: res.data.joinee,  
+      }));
+    });
+  } catch (err) {
+    console.error("Error joining room:", err);
+  }
+  }
+
 }
