@@ -3,21 +3,50 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "dist/**"]
+      "env": ["DATABASE_URL"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        ".next/**",
+        "dist/**"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ]
     },
     "dev": {
-      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "inputs": [
+        "src/**",
+        "package.json",
+        "tsconfig.json"
+      ],
       "cache": false,
       "persistent": true,
-      "outputs": ["dist/**"]
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false,
+      "persistent": true 
+    },
+    "db:deploy": {
+      "cache": false
     }
   }
 }

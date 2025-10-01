@@ -61,7 +61,6 @@ model Space {
   host          User           @relation("hostedBy", fields: [hostId], references: [id])
   isActive      Boolean        @default(true)
   currentStream CurrentStream?
-  joineeId      String?    
   participants  User[]         @relation("spaceParticipants") // ✅ same name as in User
 }
 

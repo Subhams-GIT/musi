@@ -1,3 +1,5 @@
-export { PrismaClient } from "@prisma/client/scripts/default-index.js";
-import prisma  from "./client"; 
-export default prisma;
+import { PrismaClient } from "@prisma/client";
+import prisma from './client'
+
+export default prisma;            // default export: the client
+export { PrismaClient };          // named export: the class

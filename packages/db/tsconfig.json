@@ -22,6 +22,9 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+    "paths": {
+       "@repo/db": ["./repo/db/src/index.ts"]
+    }
   }
 }

@@ -1,12 +1,13 @@
 import GoogleProvider from "next-auth/providers/google";
 import type { NextAuthOptions } from "next-auth";
-import prisma  from "@repo/db";
+import prisma from "@repo/db";
+import { randomUUID } from "crypto";
 
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.CLIENT_SECRET as string,
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.CLIENT_SECRET!,
       authorization: {
         params: {
           prompt: "consent",
@@ -16,59 +17,48 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  session: {
+    strategy: "jwt",          
+    maxAge: 60 * 60 * 24 * 30, 
+  },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+  },
   callbacks: {
-    // Persist user id in JWT
     async jwt({ token, user }) {
+
       if (user) {
-        console.log(user);
-        token.id = user.id;
+        token.uid = user.id;          
+        token.sessionId = randomUUID();
       }
       return token;
     },
-
-    // Make the id available in the session
-    async session({ session, token, user }) {
-      if (token) {
-        session.user.id = token.id as string;
-      }
+    async session({ session, token }) {
+      session.user.id = token.uid as string;
       return session;
     },
-
-    // Handle user sign-in and creation
-    async signIn({ account, profile, user }) {
+    async signIn({ profile, user }) {
       if (!profile?.email) return false;
+      const existingUser = await prisma.user.findUnique({
+        where: { email: profile.email },
+      });
 
-      try {
-        const existingUser = await prisma.user.findFirst({
-          where: { email: profile.email },
-        });
-
-        if (existingUser) {
-          user.id = existingUser.id;
-          return true;
-        }
-
-        if (!existingUser) {
-          const newUser = await prisma.user.create({
-            data: {
-              email: profile.email,
-              provider: "Google", // or Provider.Google if it's an enum
-              role: "Streamer",
-              name: profile.name ?? "Guest",
-            },
-          });
-          user.id = newUser.id;
-        }
-      } catch (error) {
-        console.error("SignIn Error:", error);
-        return false;
+      if (existingUser) {
+        user.id = existingUser.id;
+        return true;
       }
 
+      const newUser = await prisma.user.create({
+        data: {
+          email: profile.email,
+          provider: "Google",
+          role: "Streamer",
+          name: profile.name ?? "Guest",
+        },
+      });
+      user.id = newUser.id;
       return true;
     },
-  },
-  session: {
-    strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

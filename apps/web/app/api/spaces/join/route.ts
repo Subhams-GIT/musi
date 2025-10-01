@@ -2,8 +2,11 @@ import { getServerSession } from "next-auth";
 import prisma from "@repo/db";
 import authOptions from "../../../lib/auth";
 import { NextResponse } from "next/server";
+import { useContext } from "react";
+import { WebSocketContext } from "../../../../Context/wsContext";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
+    const ws = useContext(WebSocketContext)
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return new Response(JSON.stringify({ message: "Unauthorized" }), { status: 401 });
@@ -15,23 +18,43 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         if (!stream) {
             return new Response(JSON.stringify({ message: "Stream not found" }), { status: 404 });
         }
+        const existing = await prisma.space.findFirst({
+            where: {
+                id: streamId,
 
-      await prisma.space.update({
-        where:{
-            id:streamId
-        },
-        data:{
-            participants:{
-                connect:{
-                    id:session.user.id
+            },
+            include: {
+                participants: {
+                    where: {
+                        id: session.user.id
+                    }
                 }
             }
-        }
-      })
+        })
 
-        const joinee=await prisma.user.findFirst({
-            where:{
-                id:session.user.id
+        if (existing && existing?.participants.length > 0) {
+            return NextResponse.json({
+                msg: "you are already in the Space !"
+            }, {
+                status: 400
+            })
+        }
+
+        await prisma.space.update({
+            where: {
+                id: streamId
+            },
+            data: {
+                participants: {
+                    connect: {
+                        id: session.user.id
+                    }
+                }
+            }
+        })
+        const joinee = await prisma.user.findFirst({
+            where: {
+                id: session.user.id
             }
         })
         return NextResponse.json({
