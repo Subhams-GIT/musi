@@ -4,8 +4,8 @@ import youtubesearchapi from "youtube-search-api";
 import { Job, Queue, Worker } from "bullmq";
 import  prisma  from "@repo/db";
 import { checkforurl } from "./util.js";
+import { PrismaClient } from "@repo/db";
 
-const {PrismaClient}=prisma.PrismaClient;
 const MAX_QUEUE_LENGTH = 5;
 const connection = {
     host: "localhost",
@@ -46,7 +46,7 @@ export default class SpaceManager {
         this.redisClient = createClient(redisCredentials);
         this.publisher = createClient(redisCredentials);
         this.consumer = createClient(redisCredentials);
-        this.prisma = new PrismaClient();
+        this.prisma = prisma;
         this.queue = new Queue(process.pid.toString(), {
             connection,
         });

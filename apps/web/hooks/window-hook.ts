@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 export default function useWindow(){
-    const [windowsize,setwindowsize]=useState(()=>window.innerWidth);
+    const [windowsize,setwindowsize]=useState(0);
     useEffect(()=>{
         const handleResize = () => {
             setwindowsize(window.innerWidth);

@@ -15,7 +15,7 @@ if (cluster.isPrimary) {
     process.exit();
   });
 } else {
-  main();
+  main()
 }
 
 type Data = {
@@ -26,7 +26,6 @@ type Data = {
   vote: "up" | "down";
   streamId: string;
 };
-
 
 function createHttpServer() {
   return http.createServer((req, res) => {
@@ -130,7 +129,7 @@ async function handleUserAction(ws: WebSocket, type: string, data: Data) {
     data.userId = user.userId;
     await processUserAction(type, data);
   } else {
-   
+
   }
 }
 

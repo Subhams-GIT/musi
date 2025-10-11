@@ -1,80 +1,28 @@
 'use client'
-import { Crown, CrownIcon, Edit, LeafyGreenIcon, Pause, Play, Search, Settings, Share2, UserCheck, Users } from "lucide-react"
-import SideBar, { Mobile_sidebar } from "../../Components/SideBar"
-import { Button } from "../../utils/utils"
-import { Hosted, Spaces } from "../../utils/types"
+import { Crown, CrownIcon,LeafyGreenIcon, Pause, Play, Search, Share2, UserCheck, Users } from "lucide-react"
+import SideBar, { Mobile_sidebar } from "Components/SideBar"
+import { Button } from "utils/utils"
+import { Hosted, Spaces } from "utils/types"
 import { useEffect, useState } from "react"
-import NavBar from "../../Components/NavBar"
-import useWindow from "../../hooks/window-hook"
+import NavBar from "@/Components/NavBar"
+import useWindow from "hooks/window-hook"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 export default function Page() {
     const [open, setopen] = useState(false)
     const router=useRouter();
-    const [allStreams, setallStreams] = useState<Hosted>({
-        spaces: [
-            {
-                id: "6",
-                name: "My Stream 1",
-                streams: [],
-                hostId: "user1",
-                hostName: "User One",
-                isActive: true,
-                currentStream: "stream1",
-                joinees: 5,
-                myvotes: 10,
-                mysongs: 2,
-                hosted: true,
-                totalStreamTime: 0
-            },
-            {
-                id: "5",
-                name: "My Stream 2",
-                streams: [],
-                hostId: "user1",
-                hostName: "User One",
-                isActive: true,
-                currentStream: "stream1",
-                joinees: 5,
-                myvotes: 10,
-                mysongs: 2,
-                hosted: true,
-                totalStreamTime: 0
-            },
-            {
-                id: "1",
-                name: "My Stream 3",
-                streams: [],
-                hostId: "user1",
-                hostName: "User One",
-                isActive: false,
-                currentStream: "stream1",
-                joinees: 5,
-                myvotes: 10,
-                mysongs: 2,
-                hosted: false,
-                totalStreamTime: 0
-            },
-            {
-                id: "3",
-                name: "My Stream 4",
-                streams: [],
-                hostId: "user1",
-                hostName: "User One",
-                isActive: false,
-                currentStream: "stream1",
-                joinees: 5,
-                myvotes: 10,
-                mysongs: 2,
-                hosted: false,
-                totalStreamTime: 0
-            }
-        ]
-    })
+    const [allStreams, setallStreams] = useState<Hosted>([])
     const [originalStreams, setoriginalStreams] = useState<Hosted>(allStreams);
     const [activeTab, setActivetab] = useState<string>("Hosted");
     const [searchInput, setsearchInput] = useState("");
-    const windowsize = useWindow(); // this function runs on the very first render but if it was a value then it would run on every re render 
+    const windowsize = useWindow();
+    useEffect(()=>{
+        axios.get('http://localhost:3000/api/spaces').then(r=>{
+            console.log(r.data)
+            setallStreams(r.data.returnSpaces);
+        })
+    },[])
 
 
     useEffect(() => {
@@ -84,11 +32,11 @@ export default function Page() {
         } else {
             timeout = setTimeout(() => {
                 if (originalStreams) {
-                    const searchResult = originalStreams.spaces.filter(space =>
+                    const searchResult = originalStreams.filter(space =>
                         space.name.toLowerCase().includes(searchInput.trim().toLowerCase())
                     );
                     setallStreams({
-                        spaces: searchResult as Spaces[]
+                        ...searchResult
                     });
                 }
             }, 500);
@@ -157,7 +105,7 @@ export default function Page() {
                 <section className="w-full flex justify-center items-center">
                     <div className="w-[70%] grid grid-cols-1 md:grid-cols-2 gap-6">
                         {
-                            activeTab === "Hosted" && allStreams.spaces.map(space => (
+                            activeTab === "Hosted" && allStreams.map((space:any) => (
                                 space.hosted &&
                                 <div key={space.id as string} className="bg-black border border-neutral-700 rounded-xl p-4 flex flex-col gap-4 shadow-md">
                                     <section className="flex justify-between items-center">
@@ -183,7 +131,7 @@ export default function Page() {
                                         <section className="flex flex-col items-center justify-center">
                                             <Users className="h-4 w-4 text-white mb-1" />
                                             <span className="text-xs">Joinees</span>
-                                            <span className="font-bold">{space.joinees}</span>
+                                            <span className="font-bold">{space.joinees || 0}</span>
                                         </section>
                                         <section className="flex flex-col items-center justify-center">
                                             <LeafyGreenIcon className="h-4 w-4 text-green-400 mb-1" />
@@ -216,7 +164,7 @@ export default function Page() {
                             ))
                         }
                         {
-                            activeTab === "Joined" && allStreams.spaces.map(space => (
+                            activeTab === "Joined" && allStreams.map(space => (
                                 !space.hosted &&
                                 <Streamlayout key={space.id as string} {...space} />
                             ))
@@ -254,7 +202,7 @@ export function Streamlayout(space: Spaces) {
                 <section className="flex flex-col items-center justify-center">
                     <Users className="h-4 w-4 text-white mb-1" />
                     <span className="text-xs">Joinees</span>
-                    <span className="font-bold">{space.joinees}</span>
+                    <span className="font-bold text-white">{0}</span>
                 </section>
                 <section className="flex flex-col items-center justify-center">
                     <LeafyGreenIcon className="h-4 w-4 text-green-400 mb-1" />

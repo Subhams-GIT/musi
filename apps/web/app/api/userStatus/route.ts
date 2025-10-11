@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import authOptions from "../../lib/auth";
+import authOptions from "../../../lib/auth";
 import prisma from "@repo/db";
 
-export default async function GET(){
+export async function GET(){
 	const session=await getServerSession(authOptions);
 	if(!session?.user.id){
 		return NextResponse.json({
@@ -22,15 +22,21 @@ export default async function GET(){
 		}),
 		prisma.space.count({
 			where:{
-				joineeId:session.user.id
+				participants:{
+					some:{
+						id:session.user.id
+					}
+				}
 			}
 		}),
-		prisma.space.findMany({
+		prisma.space.count({
 			where:{
 				OR:[
 					{hostId:session.user.id},
-					{joineeId:session.user.id}
-				]
+					{participants:{
+						some:{
+							id:session.user.id}
+			}}]
 			}
 		})
 	])

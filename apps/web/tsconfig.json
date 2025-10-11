@@ -5,7 +5,11 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["*"] // Maps the "@/..." alias to the root directory
+    },
   },
   "include": [
     "**/*.ts",

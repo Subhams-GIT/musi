@@ -2,7 +2,7 @@ import prisma  from "@repo/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import {z} from 'zod'
-import authOptions from "../../../lib/auth";
+import authOptions from "../../../../lib/auth";
 const DownvoteSchema=z.object({
 	streamId:z.string()
 })

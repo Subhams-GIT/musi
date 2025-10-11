@@ -1,8 +1,9 @@
 import prisma from "@repo/db";
-import authOptions from "../../lib/auth";
+import authOptions from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-
+import { createShareLink} from "@repo/redis";
+import { History } from "@/utils/types";
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,8 +22,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-
+    
     const space = await prisma.space.create({
       data: {
         name: data.spaceName,
@@ -31,9 +31,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-
+    const link=await createShareLink(space.id);
+    await prisma.space.update({
+      where:{
+        id:space.id
+      },
+      data:{
+       link
+      }
+    })
     return NextResponse.json(
-      { success: true, message: "Space created successfully", space },
+      { success: true, message: "Space created successfully", link },
       { status: 201 }
     );
   } catch (error: any) {
@@ -144,11 +152,43 @@ export async function GET(req: NextRequest) {
     // If no spaceId is provided, retrieve all spaces
     const spaces = await prisma.space.findMany({
       where: {
-        hostId: session.user.id
+        OR:[
+          {hostId: session.user.id},
+          {participants:{
+            some:{
+              id:session.user.id
+            }
+          }}
+        ]
+      },
+      include:{
+        streams:true,
+        host:true,
+        currentStream:true,
       }
     })
+
+    const returnSpaces:History=spaces.map(s=>{
+      const isHosted=s.hostId===session.user.id
+      const mysongs=s.streams.map(stream=>{
+        const Added=stream.addedBy===session.user.id?stream:null
+        
+        return {
+          ...stream,
+          Added
+        }
+      })
+      return {
+        ...s,
+        streams:mysongs,
+        hosted:isHosted,
+        hostName:s.host.name|| "",
+        currentStream:s.currentStream?.streamId as string
+      }
+    })
+
     return NextResponse.json(
-      { success: true, message: "Spaces retrieved successfully", spaces },
+      { success: true, message: "Spaces retrieved successfully", returnSpaces },
       { status: 200 })
 
   } catch (error: any) {

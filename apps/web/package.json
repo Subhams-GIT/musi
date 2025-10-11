@@ -11,7 +11,6 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "auxillary-service":"workspace:*",
     "@prisma/client": "^6.14.0",
     "@repo/db": "workspace:*",
     "@repo/redis": "workspace:*",
@@ -19,6 +18,8 @@
     "@tailwindcss/postcss": "^4.1.12",
     "@vercel/analytics": "1.3.1",
     "autoprefixer": "^10.4.20",
+    "auxillary-service": "workspace:*",
+    "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",

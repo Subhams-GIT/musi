@@ -27,7 +27,7 @@ export type Spaces = {
 	myvotes?:number
 	mysongs?:number
 	hosted?:boolean
-	totalStreamTime:number
+	totalStreamTime?:number
 }
 
 export type UserStatus = {
@@ -36,11 +36,9 @@ export type UserStatus = {
 	"total Streams Attended": number;
 }
 
-export type History = {
-	spaces: Spaces[]
-}
+export type History=Spaces[]
 
-export type Hosted={
-	spaces:Spaces[]
-}
+
+export type Hosted=Spaces[]
+
 

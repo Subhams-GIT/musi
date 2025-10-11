@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod' // doubt
 import youtubesearchapi from 'youtube-search-api';
 import { getServerSession } from "next-auth";
-import authOptions from "../../lib/auth";
+import authOptions from "../../../lib/auth";
 
 const YT_REGEX = new RegExp(/^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/)
 const CreateStreamSchema = z.object({

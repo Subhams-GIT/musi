@@ -61,7 +61,8 @@ model Space {
   host          User           @relation("hostedBy", fields: [hostId], references: [id])
   isActive      Boolean        @default(true)
   currentStream CurrentStream?
-  participants  User[]         @relation("spaceParticipants") // ✅ same name as in User
+  participants  User[]         @relation("spaceParticipants") 
+  link          String? 
 }
 
 model Upvote {

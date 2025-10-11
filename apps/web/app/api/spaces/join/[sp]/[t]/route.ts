@@ -1,11 +1,13 @@
 import { getServerSession } from "next-auth";
 import prisma from "@repo/db";
-import authOptions from "../../../lib/auth";
+import authOptions from "lib/auth";
 import { NextResponse } from "next/server";
 import { useContext } from "react";
-import { WebSocketContext } from "../../../../Context/wsContext";
+import { WebSocketContext } from "Context/wsContext";
+import { getSpace } from "@repo/redis";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+
+export async function POST(req: Request, { params }: { params: { id: string , token:string} }) {
     const ws = useContext(WebSocketContext)
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -13,15 +15,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const streamId = params.id;
+    const token=params.token;
     try {
         const stream = await prisma.space.findUnique({ where: { id: streamId } });
-        if (!stream) {
-            return new Response(JSON.stringify({ message: "Stream not found" }), { status: 404 });
+        const isValidToken=await getSpace(token);
+        
+        if (!stream || !isValidToken) {
+            return new Response(JSON.stringify({ message: "space not found" }), { status: 404 });
         }
         const existing = await prisma.space.findFirst({
             where: {
                 id: streamId,
-
             },
             include: {
                 participants: {

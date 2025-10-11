@@ -1,8 +1,9 @@
 import GoogleProvider from "next-auth/providers/google";
 import type { NextAuthOptions } from "next-auth";
-import prisma from "@repo/db";
+// import { PrismaClient } from "@repo/db";
 import { randomUUID } from "crypto";
-
+import prisma from "@repo/db";
+// const prisma=new PrismaClient();
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -42,7 +43,6 @@ const authOptions: NextAuthOptions = {
       const existingUser = await prisma.user.findUnique({
         where: { email: profile.email },
       });
-
       if (existingUser) {
         user.id = existingUser.id;
         return true;

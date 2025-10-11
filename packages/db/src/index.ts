@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import prisma from './client'
 
+import prisma from './client'
+export type  { PrismaClient } from '@prisma/client';
 export default prisma;            // default export: the client
-export { PrismaClient };          // named export: the class
+// export type PrismaClient from ''        // named export: the class
