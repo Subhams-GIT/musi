@@ -2,8 +2,9 @@ import prisma from "@repo/db";
 import authOptions from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
-import { createShareLink} from "@repo/redis";
+import { createShareLink } from "@repo/redis";
 import { History } from "@/utils/types";
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,30 +23,43 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     const space = await prisma.space.create({
       data: {
         name: data.spaceName,
         hostId: session.user.id,
-        description:data.description
+        description: data.description,
       },
     });
 
-    const link=await createShareLink(space.id);
+    const link = await createShareLink(space.id, session.user.id);
+
     await prisma.space.update({
-      where:{
-        id:space.id
+      where: {
+        id: space.id,
       },
-      data:{
-       link
-      }
-    })
+      data: {
+        link,
+      },
+    });
+
+    await prisma.user.update({
+      where: {
+        id: session.user.id,
+      },
+      data: {
+        hostedSpaces: {
+          connect: {
+            id: space.id,
+          },
+        },
+      },
+    });
     return NextResponse.json(
-      { success: true, message: "Space created successfully", link },
+      { success: true, message: "Space created successfully", link},
       { status: 201 }
     );
   } catch (error: any) {
-
     if (error.message === "Unauthenticated Request") {
       return NextResponse.json(
         { success: false, message: "You must be logged in to create a space" },
@@ -53,9 +67,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error(error)
+    console.error(error);
     return NextResponse.json(
-      { success: false, message: `An unexpected error occurred: ${error.message}` },
+      {
+        success: false,
+        message: `An unexpected error occurred: ${error.message}`,
+      },
       { status: 500 }
     );
   }
@@ -78,7 +95,7 @@ export async function DELETE(req: NextRequest) {
         { status: 401 }
       );
     }
-    console.log(spaceId)
+    console.log(spaceId);
     const space = await prisma.space.findUnique({
       where: { id: spaceId },
     });
@@ -90,26 +107,25 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-
     if (space.hostId !== session.user.id) {
       return NextResponse.json(
-        { success: false, message: "You are not authorized to delete this space" },
+        {
+          success: false,
+          message: "You are not authorized to delete this space",
+        },
         { status: 403 }
       );
     }
 
-
     await prisma.space.delete({
       where: { id: spaceId },
     });
-
 
     return NextResponse.json(
       { success: true, message: "Space deleted successfully" },
       { status: 200 }
     );
   } catch (error: any) {
-
     console.error("Error deleting space:", error);
     return NextResponse.json(
       { success: false, message: `Error deleting space: ${error.message}` },
@@ -123,7 +139,10 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "You must be logged in to retrieve space information" },
+        {
+          success: false,
+          message: "You must be logged in to retrieve space information",
+        },
         { status: 401 }
       );
     }
@@ -133,7 +152,10 @@ export async function GET(req: NextRequest) {
     if (spaceId) {
       const space = await prisma.space.findUnique({
         where: { id: spaceId },
-        select: { hostId: true },
+        include: {
+          streams: true,
+          currentStream: true,
+        },
       });
 
       if (!space) {
@@ -144,7 +166,11 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { success: true, message: "Host ID retrieved successfully", hostId: space.hostId },
+        {
+          success: true,
+          message: "Host ID retrieved successfully",
+          space: space,
+        },
         { status: 200 }
       );
     }
@@ -152,51 +178,52 @@ export async function GET(req: NextRequest) {
     // If no spaceId is provided, retrieve all spaces
     const spaces = await prisma.space.findMany({
       where: {
-        OR:[
-          {hostId: session.user.id},
-          {participants:{
-            some:{
-              id:session.user.id
-            }
-          }}
-        ]
+        OR: [
+          { hostId: session.user.id },
+          {
+            participants: {
+              some: {
+                id: session.user.id,
+              },
+            },
+          },
+        ],
       },
-      include:{
-        streams:true,
-        host:true,
-        currentStream:true,
-      }
-    })
+      include: {
+        streams: true,
+        host: true,
+        currentStream: true,
+      },
+    });
 
-    const returnSpaces:History=spaces.map(s=>{
-      const isHosted=s.hostId===session.user.id
-      const mysongs=s.streams.map(stream=>{
-        const Added=stream.addedBy===session.user.id?stream:null
-        
+    const returnSpaces: History = spaces.map((s) => {
+      const isHosted = s.hostId === session.user.id;
+      const mysongs = s.streams.map((stream) => {
+        const Added = stream.addedBy === session.user.id ? stream : null;
+
         return {
           ...stream,
-          Added
-        }
-      })
+          Added,
+        };
+      });
       return {
         ...s,
-        streams:mysongs,
-        hosted:isHosted,
-        hostName:s.host.name|| "",
-        currentStream:s.currentStream?.streamId as string
-      }
-    })
+        streams: mysongs,
+        hosted: isHosted,
+        hostName: s.host.name || "",
+        currentStream: s.currentStream?.streamId as string,
+      };
+    });
 
     return NextResponse.json(
       { success: true, message: "Spaces retrieved successfully", returnSpaces },
-      { status: 200 })
-
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Error retrieving space:", error);
     return NextResponse.json(
       { success: false, message: `Error retrieving space: ${error.message}` },
       { status: 500 }
     );
-
   }
 }

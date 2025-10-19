@@ -7,7 +7,8 @@
   "scripts": {
     "start": "nodemon --watch src --ext ts,js --exec \"node --loader ts-node/esm src/index.ts\"",
     "build": "tsc -b ",
-    "dev": "tsx src/index.ts",
+    "dev": "pnpm run predev && tsx src/index.ts",
+    "predev": "pnpm --filter @repo/db run build",
     "check-types": "tsc --noEmit"
   },
   "keywords": [],
@@ -19,6 +20,7 @@
     "axios": "^1.12.2",
     "bullmq": "^5.58.5",
     "cluster": "^0.7.7",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.2",
     "redis": "^5.8.1",
     "uuid": "^11.1.0",

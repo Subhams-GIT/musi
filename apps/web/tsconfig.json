@@ -1,4 +1,5 @@
 {
+  
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
     "plugins": [
@@ -6,6 +7,8 @@
         "name": "next"
       }
     ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"] // Maps the "@/..." alias to the root directory

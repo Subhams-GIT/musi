@@ -1,23 +1,33 @@
 import { WebSocket, WebSocketServer } from "ws";
 import cluster from "cluster";
 import http from "http";
+import dotenv from 'dotenv'
 import SpaceManager from "./streammanager.js";
 //@ts-ignore
 import jwt from 'jsonwebtoken'
-const cors = 1; 
+import { fileURLToPath } from "url";
+import path from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, '../.env');
 
+dotenv.config({ path: envPath });
+const cors = 1; 
+console.log(process.env.NEXTAUTH_SECRET)
 if (cluster.isPrimary) {
   for (let i = 0; i < cors; i++) {
     cluster.fork();
   }
 
   cluster.on("disconnect", () => {
-    process.exit();
+    process.exit(); 
   });
 } else {
   main()
 }
-
+ 
+// spaceid userid -> token , ws 
+// spaceid userid -> token , ws 
 type Data = {
   userId: string;
   spaceId: string;
@@ -25,6 +35,7 @@ type Data = {
   url: string;
   vote: "up" | "down";
   streamId: string;
+
 };
 
 function createHttpServer() {
@@ -63,9 +74,9 @@ async function handleJoinRoom(ws: WebSocket, data: Data) {
        ws.send(JSON.stringify({error:"not authenticated"}))
       } else {
         SpaceManager.getInstance().joinRoom(
-          data.spaceId,
+          decoded.spaceId,
           decoded.creatorId,
-          decoded.userId,
+          data.userId,
           ws,
           data.token
         );
@@ -74,7 +85,7 @@ async function handleJoinRoom(ws: WebSocket, data: Data) {
   );
 }
 
-async function processUserAction(type: string, data: Data) {
+async function processUserAction(type: string, data: Data,ws:any) {
   switch (type) {
     case "cast-vote":
       await SpaceManager.getInstance().castVote(
@@ -127,9 +138,9 @@ async function handleUserAction(ws: WebSocket, type: string, data: Data) {
 
   if (user) {
     data.userId = user.userId;
-    await processUserAction(type, data);
+    await processUserAction(type, data,ws);
   } else {
-
+    return new Error('user not found ')    
   }
 }
 

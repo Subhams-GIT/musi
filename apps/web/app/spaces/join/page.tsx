@@ -1,19 +1,34 @@
-'use client'
-import { ChevronDown, ChevronUp, ChevronUpIcon, Clock, Music, Pause, Play, Plus, Settings, Share, SkipForward, Users, Volume2 } from "lucide-react"
-import useWindow from "@/hooks/window-hook"
-import { useState } from "react"
-import NavBar from "@/Components/NavBar"
-import SideBar, { Mobile_sidebar } from "@/Components/SideBar"
+"use client";
+import {
+  ChevronDown,
+  ChevronUp,
+  ChevronUpIcon,
+  Clock,
+  Music,
+  Pause,
+  Play,
+  Plus,
+  Settings,
+  Share,
+  SkipForward,
+  Users,
+  Volume2,
+} from "lucide-react";
+import useWindow from "@/hooks/window-hook";
+import { useActionState, useContext, useEffect, useState } from "react";
+import NavBar from "@/Components/NavBar";
+import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
+import { useSearchParams } from "next/navigation";
+import axios from "axios";
+import { WebSocketContext } from "@/Context/wsContext";
+// @ts-ignore
 
-
-const mockStream = {
-  id: "1",
-  name: "Friday Night Vibes",
-  host: "Alex Johnson",
-  participants: 12,
-  maxParticipants: 20,
-  isHost: true,
-}
+type currentStream = {
+  id: string;
+  userId: string;
+  spaceId: string | null;
+  streamId: string | null;
+};
 
 const staticQueue = [
   {
@@ -56,7 +71,7 @@ const staticQueue = [
     isPlaying: false,
     progress: 0,
   },
-]
+];
 
 const mockParticipants = [
   { id: "1", name: "Alex Johnson", isHost: true, isOnline: true },
@@ -64,47 +79,83 @@ const mockParticipants = [
   { id: "3", name: "Mike Wilson", isHost: false, isOnline: true },
   { id: "4", name: "Emma Davis", isHost: false, isOnline: false },
   { id: "5", name: "John Smith", isHost: false, isOnline: true },
-]
+];
+import { useSession } from "next-auth/react";
 
-
-const currentSong = staticQueue.find((song) => song.isPlaying)
+const currentSong = staticQueue.find((song) => song.isPlaying);
 
 export default function StreamPageStatic() {
+  const session = useSession();
+  const ws = useContext(WebSocketContext);
+  const params = useSearchParams();
+  const token = params.get("t");
   const windowsize = useWindow();
   const [open, setopen] = useState(false);
-  const showAddUser = false
-  const showAddSong = false
+  const [streams, setstreams] = useState([]);
+  const [currentstream, setcurrentstream] = useState<currentStream>({id:"",userId:"",spaceId:"",streamId:""});
+  const [participant, setparticipants] = useState([]);
+  const [space,setspace]=useState<{name:string,description:string}>();
+  let showAddSong=false
+  let showAddUser=false;
+  useEffect(() => {
+    async function joinRoom() {
+      if (!token) return;
+      try {
+        const space = await axios.post(
+          `http://localhost:3000/api/spaces/join?t=${token}`
+        );
+        console.log(space)
+        ws?.current?.send(
+          JSON.stringify({
+            type: "join-room",
+            data: { token, ws, userId: session.data?.user.id },
+          })
+        );
+        setstreams(space.data.space.streams);
+        setcurrentstream(space.data.space.currentStream.streamId);
+        setparticipants(space.data.space.participants);
+        setspace({name:space.data.space.name,description:space.data.space.description})
 
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    joinRoom();
+  }, []);
   return (
-    <div className="flex min-h-screen bg-gray-50">
-     
-        {windowsize < 768 ? (
-          <div className="w-full fixed left-0 top-0 z-10 text-white pt-5 px-4 bg-black">
-            <NavBar open={open} setopen={setopen} title={mockStream.name}/>
-            <Mobile_sidebar setmopen={setopen} mobopen={open} />
-          </div>
-        ) : (
-          <div className="w-20 fixed left-0 top-0 z-10">
-            <SideBar />
-          </div>
-        )}
+    <div className="flex min-h-screen bg-gray-50 ">
+      {windowsize < 768 ? (
+        <div className="w-full fixed left-0 top-0 z-10 text-white pt-5 px-4 bg-black">
+          <NavBar open={open} setopen={setopen} title={space?.name??""} />
+          <Mobile_sidebar setmopen={setopen} mobopen={open} />
+        </div>
+      ) : (
+        <div className="w-20 fixed left-0 top-0 z-10">
+          <SideBar />
+        </div>
+      )}
 
-      <main className={`flex-1 overflow-auto ${windowsize<768?"pt-15":"pt-5"} min-h-screen bg-black text-white h-full`}>
+      <main
+        className={`flex-1 overflow-auto ${windowsize < 768 ? "pt-15" : "pt-5"} min-h-screen bg-black text-black h-full`}
+      >
         <div className="p-6">
           {/* Stream Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold">{mockStream.name}</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Hosted by {mockStream.host} • {mockStream.participants}/{mockStream.maxParticipants} participants
-              </p>
+              <h1 className="text-2xl font-bold text-white">
+                {currentstream.streamId}
+              </h1>
+              {/* <p className="text-sm text-gray-500 ">
+                Hosted by {mockStream.host} • {mockStream.participants}/
+                {mockStream.maxParticipants} participants
+              </p> */}
             </div>
             <div className="flex items-center gap-2">
               <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                 <Share />
                 Share
               </button>
-              {mockStream.isHost && (
+              {currentstream.userId===session.data?.user.id && (
                 <>
                   <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     <Users />
@@ -121,8 +172,12 @@ export default function StreamPageStatic() {
 
           {showAddUser && (
             <div className="p-4 border border-blue-200   dark:bg-neutral-800 rounded-lg">
-              <div className="text-lg font-semibold mb-1">Add User to Stream</div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Send an invitation to join this stream</p>
+              <div className="text-lg font-semibold mb-1">
+                Add User to Stream
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Send an invitation to join this stream
+              </p>
               <div className="flex gap-2">
                 <input
                   type="email"
@@ -149,45 +204,46 @@ export default function StreamPageStatic() {
                   <h2 className="text-xl font-semibold">Now Playing</h2>
                 </div>
                 <div>
-                  {currentSong ? (
+                  {currentstream ? (
                     <div className="space-y-4">
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                           <Music className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{currentSong.title}</h3>
-                          <p className="text-gray-500 dark:text-gray-400">{currentSong.artist}</p>
+                          <h3 className="text-lg font-semibold">
+                            {currentstream.streamId}
+                          </h3>
+                          <p className="text-gray-500 dark:text-gray-400">
+                            {currentSong?.title}
+                          </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Added by {currentSong.addedBy}
+                            Added by {currentSong?.addedBy}
                           </p>
                         </div>
                         <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 gap-1">
                           <ChevronUpIcon className="w-3 h-3" />
-                          {currentSong.votes}
+                          {currentSong?.votes}
                         </div>
                       </div>
 
                       {/* Progress Bar */}
                       <div className="space-y-2">
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${currentSong.progress}%` }}
-                          />
+                         
                         </div>
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>1:32</span>
-                          <span>{currentSong.duration}</span>
+                          <span>{currentSong?.duration}</span>
                         </div>
                       </div>
 
                       {/* Controls */}
                       <div className="flex items-center justify-center gap-4 pt-2">
                         <button className="h-12 w-12 flex items-center justify-center border rounded-full text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                          {currentSong.isPlaying ? <Pause /> : <Play />}
+                          {currentSong?.isPlaying ? <Pause /> : <Play />}
                         </button>
-                        {mockStream.isHost && (
+                        {currentstream.userId===session.data?.user.id && (
                           <button className="h-12 w-12 flex items-center justify-center border rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                             <SkipForward />
                           </button>
@@ -196,7 +252,10 @@ export default function StreamPageStatic() {
                           <Volume2 />
                           {/* Basic Volume Slider Placeholder */}
                           <div className="w-24 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full">
-                            <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `75%` }}></div>
+                            <div
+                              className="bg-blue-600 h-1.5 rounded-full"
+                              style={{ width: `75%` }}
+                            ></div>
                           </div>
                         </div>
                       </div>
@@ -204,7 +263,9 @@ export default function StreamPageStatic() {
                   ) : (
                     <div className="text-center py-8">
                       <Music className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-500 dark:text-gray-400">No song currently playing</p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No song currently playing
+                      </p>
                     </div>
                   )}
                 </div>
@@ -216,7 +277,8 @@ export default function StreamPageStatic() {
                   <div className="flex items-center gap-2">
                     <Clock />
                     <h2 className="text-xl font-semibold">
-                      Queue ({staticQueue.filter((s) => !s.isPlaying).length} songs)
+                      Queue ({staticQueue.filter((s) => !s.isPlaying).length}{" "}
+                      songs)
                     </h2>
                   </div>
                   <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
@@ -234,7 +296,10 @@ export default function StreamPageStatic() {
                     <div className="space-y-4">
                       {/* URL Input */}
                       <div className="space-y-2">
-                        <label htmlFor="song-url" className="text-sm font-medium block">
+                        <label
+                          htmlFor="song-url"
+                          className="text-sm font-medium block"
+                        >
                           Add from URL
                         </label>
                         <div className="flex gap-2">
@@ -251,13 +316,17 @@ export default function StreamPageStatic() {
 
                       <div className="flex items-center gap-4">
                         <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">OR</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          OR
+                        </span>
                         <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
                       </div>
 
                       {/* Manual Input */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium block">Add manually</label>
+                        <label className="text-sm font-medium block">
+                          Add manually
+                        </label>
                         <div className="flex gap-2 mb-3">
                           <input
                             placeholder="Song title"
@@ -302,13 +371,17 @@ export default function StreamPageStatic() {
                           </p>
                         </div>
 
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{song.duration}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {song.duration}
+                        </div>
 
                         <div className="flex items-center gap-1">
                           <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-green-100 dark:hover:bg-green-900/20 hover:text-green-600">
                             <ChevronUp />
                           </button>
-                          <span className="text-sm font-medium w-8 text-center">{song.votes}</span>
+                          <span className="text-sm font-medium w-8 text-center">
+                            {song.votes}
+                          </span>
                           <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600">
                             <ChevronDown />
                           </button>
@@ -320,7 +393,9 @@ export default function StreamPageStatic() {
                 {staticQueue.filter((s) => !s.isPlaying).length === 0 && (
                   <div className="text-center py-8">
                     <Clock className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400 mb-2">Queue is empty</p>
+                    <p className="text-gray-500 dark:text-gray-400 mb-2">
+                      Queue is empty
+                    </p>
                     <button className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 mx-auto">
                       <Plus />
                       Add the first song
@@ -341,20 +416,31 @@ export default function StreamPageStatic() {
                 </div>
                 <div className="space-y-3">
                   {mockParticipants.map((participant) => (
-                    <div key={participant.id} className="flex items-center gap-3">
+                    <div
+                      key={participant.id}
+                      className="flex items-center gap-3"
+                    >
                       <div className="relative flex-shrink-0">
                         {/* Avatar Placeholder */}
                         <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-semibold uppercase">
-                          {participant.name.split(" ").map((n) => n[0]).join("")}
+                          {participant.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </div>
                         {/* Status Dot */}
                         <div
-                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${participant.isOnline ? "bg-green-500" : "bg-gray-400"
-                            }`}
+                          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${
+                            participant.isOnline
+                              ? "bg-green-500"
+                              : "bg-gray-400"
+                          }`}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{participant.name}</p>
+                        <p className="text-sm font-medium truncate">
+                          {participant.name}
+                        </p>
                         {participant.isHost && (
                           <div className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded">
                             Host
@@ -370,5 +456,5 @@ export default function StreamPageStatic() {
         </div>
       </main>
     </div>
-  )
+  );
 }

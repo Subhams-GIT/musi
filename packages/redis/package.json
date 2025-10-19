@@ -2,15 +2,19 @@
   "name": "@repo/redis",
   "module": "src/index.ts",
   "main": "src/index.ts",
-  "devDependencies": {
-    "@types/bun": "latest"
+  "scripts": {
+    "build": "tsc"
   },
-  "peerDependencies": {
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.2",
     "redis": "^5.8.1"
   }
 }

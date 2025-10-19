@@ -1,11 +1,16 @@
 "use client";
 
-import NavBar from "../../Components/NavBar";
-import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
-import { useState } from "react";
-import useWindow from "../../hooks/window-hook";
-import { Music, Settings, Users } from "lucide-react";
+import NavBar from "@/Components/NavBar";
+import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
+import { useContext, useState } from "react";
+import useWindow from "@/hooks/window-hook";
+import { Copy, Music, Settings, Users,SquareArrowOutUpRightIcon } from "lucide-react";
 import axios from "axios";
+import { WebSocketContext } from "@/Context/wsContext";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
+
 export default function Page() {
   const windowsize = useWindow();
   const [open, setopen] = useState(false);
@@ -16,17 +21,24 @@ export default function Page() {
     spaceName: "",
     description: "",
   });
+  const [spacelink,setspacelink]=useState("");
+  const session=useSession();
   const [loading,setloading]=useState(false)
+  const ws=useContext(WebSocketContext);
+  const navigate=useRouter();
 
   const createSpace = async () => {
     try {
         setloading(true)
-      const res = await axios.post("http://localhost:3000/api/spaces", {
+        const res= await axios.post("http://localhost:3000/api/spaces", {
         spaceName: spacename,
         description: spacedesc,
       });
+      const token=res.data.link?.split("?t=")[1];
+      ws?.current?.send(JSON.stringify({type:"join-room",data:{ws:ws.current,userId:session.data?.user.id,token}}));
       setloading(false)
-      // Store last created space for preview
+      setspacelink(res.data.link)
+      // navigate.replace(res.data.link)
       setCreatedSpace({
         spaceName: spacename,
         description: spacedesc,
@@ -36,8 +48,11 @@ export default function Page() {
       setstreamcreated(true);
     } catch (error) {
       console.log(error);
+    }finally{
+      setloading(false)
     }
   };
+
   return (
     <div className="bg-gradient-to-br from-black via-neutral-900 to-indigo-950 min-h-screen w-full flex flex-col items-center py-8 px-2 md:px-8 gap-8">
       {/* Navigation */}
@@ -149,6 +164,7 @@ export default function Page() {
         </section>
         <span className="text-neutral-400 text-sm mb-4">
           Preview how your stream will appear to participants
+          <button onClick={()=>navigate.replace(spacelink)}><SquareArrowOutUpRightIcon/></button>
         </span>
         <section className="bg-neutral-900 rounded-xl p-4 flex flex-col gap-3">
           <div className="flex justify-between items-center">
@@ -159,6 +175,9 @@ export default function Page() {
           </div>
           <span className="text-neutral-300 text-sm">
             {createdSpace.description}
+          </span>
+          <span className="text-white ">
+            {spacelink}<Copy onClick={()=>navigator.clipboard.writeText(spacelink)}/>
           </span>
           <div className="flex gap-4 items-center">
             <span className="flex items-center gap-1 text-white text-sm">

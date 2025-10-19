@@ -16,7 +16,7 @@ model User {
   name     String?
   addedStreams Stream[] @relation("addedBy")
   hostedSpaces  Space[]  @relation("hostedBy")
-   joinedSpaces  Space[]  @relation("spaceParticipants")
+  joinedSpaces  Space[]  @relation("spaceParticipants")
   upvote   Upvote[]
   Stream   Stream[]
 }

@@ -1,9 +1,9 @@
 {
    "compilerOptions": {
-    "module": "commonjs",                // or "NodeNext"
+    "module": "es2022",                // or "NodeNext"
     "moduleResolution": "node",   // required for ESM-style resolution
     "target": "ES2020",               // or higher
-    "verbatimModuleSyntax": false,     // enables strict ESM checking
+    "verbatimModuleSyntax": true,     // enables strict ESM checking
     "outDir": "dist",                 
     "rootDir": "src",                 
     "esModuleInterop": true,
