@@ -2,9 +2,8 @@ import WebSocket from "ws";
 import { createClient, RedisClientType } from "redis";
 import youtubesearchapi from "youtube-search-api";
 import { Job, Queue, Worker } from "bullmq";
-import prisma from "@repo/db";
 import { checkforurl } from "./util.js";
-import { PrismaClient } from "@repo/db";
+import prisma, { PrismaClient } from "@repo/db";
 
 const MAX_QUEUE_LENGTH = 5;
 const connection = {
@@ -44,6 +43,9 @@ export default class SpaceManager {
     this.redisClient = createClient(redisCredentials);
     this.publisher = createClient(redisCredentials);
     this.consumer = createClient(redisCredentials);
+    let globalForPrisma = global as unknown as {
+      auxServicePrisma: PrismaClient;
+    };
     this.prisma = prisma;
     this.queue = new Queue(process.pid.toString(), {
       connection,
@@ -53,14 +55,15 @@ export default class SpaceManager {
       async (job: Job) => await this.processJob(job),
       {
         connection,
-      }
+      },
     );
     this.wstoSpace = new Map();
+    console.log(this.prisma);
   }
 
   static getInstance() {
     if (!SpaceManager.instance) {
-      return new SpaceManager();
+      SpaceManager.instance = new SpaceManager();
     }
     return SpaceManager.instance;
   }
@@ -74,7 +77,7 @@ export default class SpaceManager {
           data.userId,
           data.streamId,
           data.vote,
-          data.spaceId
+          data.spaceId,
         );
         break;
       case "add-stream":
@@ -82,7 +85,7 @@ export default class SpaceManager {
           data.spaceId,
           data.userId,
           data.url,
-          data.currentStreamlength
+          data.currentStreamlength,
         );
         break;
       case "empty-queue":
@@ -120,57 +123,67 @@ export default class SpaceManager {
       console.warn("on Subscribe Room parse/forward error", err);
     }
   }
-  
-  async createRoom(
-    spaceID: string,
-  ) {
 
-    this.spaces.set(spaceID,{
-      creatorId:"",
-      users:new Map<string,User>()      
-    })
+  async createRoom(spaceID: string) {
+    this.spaces.set(spaceID, {
+      creatorId: "",
+      users: new Map<string, User>(),
+    });
   }
-
 
   async joinRoom(
     spaceID: string,
     creatorID: string,
     userID: string,
     ws: WebSocket,
-    token: string
+    token: string,
   ) {
+    console.log("joinee id ", userID);
     let space = this.spaces.get(spaceID);
     let user = this.users.get(userID);
     if (!space) {
       this.createRoom(spaceID);
       space = this.spaces.get(spaceID);
     }
-    if(!user){
-      this.users.set(userID,{
-        userId:userID,
-        ws:[ws],
-        token
-      })
-      user=this.users.get(userID);
-    }
-    else {
-      if(user.ws.some((w:WebSocket)=>w===ws)){
-        user.ws.push(ws)
+    if (!user) {
+      this.users.set(userID, {
+        userId: userID,
+        ws: [ws],
+        token,
+      });
+      user = this.users.get(userID);
+    } else {
+      if (user.ws.some((w: WebSocket) => w === ws)) {
+        user.ws.push(ws);
       }
     }
 
-    this.wstoSpace.set(ws,spaceID)
+    this.wstoSpace.set(ws, spaceID);
 
-    if(user && space){
-      space.users.set(userID,user);
+    if (user && space) {
+      space.users.set(userID, user);
       this.spaces.set(spaceID, {
         ...space,
         users: new Map(space.users),
         creatorId: creatorID,
       });
     }
-    console.log("users",this.users)
-    console.log("users",this.spaces)
+    const joineduser = await this.prisma.user.findFirst({
+      where: {
+        id: userID,
+      },
+    });
+    this.spaces.forEach((space) => {
+      if (space.creatorId === creatorID) {
+        space.users.forEach((user) => {
+          user.ws[user.ws.length - 1].send(
+            JSON.stringify({ type: "joined-space", data: { joineduser } }),
+          );
+        });
+      }
+    });
+    console.log("users", this.users);
+    console.log("spaces", this.spaces);
   }
 
   publishEmptyQueue(spaceID: string) {
@@ -198,9 +211,8 @@ export default class SpaceManager {
     if (!room || !userId) return;
 
     //TODO: mark all as played
-    await this.prisma.space.updateMany({
+    await this.prisma.stream.updateMany({
       where: {
-        played: false,
         spaceId: spaceId,
       },
       data: {
@@ -208,12 +220,11 @@ export default class SpaceManager {
         playedTs: new Date(),
       },
     });
-
     await this.publisher.publish(
       spaceId,
       JSON.stringify({
         type: "empty-queue",
-      })
+      }),
     );
   }
 
@@ -226,7 +237,7 @@ export default class SpaceManager {
             JSON.stringify({
               type: `remove-song/${spaceId}`,
               data: { streamId, spaceId },
-            })
+            }),
           );
         } catch (err) {
           console.warn("failed to send remove-song", err);
@@ -240,8 +251,6 @@ export default class SpaceManager {
     const creatorId = this.spaces.get(spaceId)?.creatorId;
 
     if (user && userId === creatorId) {
-      // Delete by id (id should be unique). If you need to enforce spaceId as well,
-      // consider a small safety check first instead of using where with two fields.
       const stream = await this.prisma.stream.findUnique({
         where: { id: streamId },
       });
@@ -255,7 +264,7 @@ export default class SpaceManager {
         JSON.stringify({
           type: "remove-song",
           data: { streamId, spaceId },
-        })
+        }),
       );
     } else {
       user?.ws.forEach((ws) => {
@@ -265,7 +274,7 @@ export default class SpaceManager {
             data: {
               message: "You can't remove the song. You are not the host",
             },
-          })
+          }),
         );
       });
     }
@@ -275,7 +284,7 @@ export default class SpaceManager {
     spaceId: string,
     streamId: string,
     vote: "upvote" | "downvote",
-    votedBy: string
+    votedBy: string,
   ) {
     const spaces = this.spaces.get(spaceId);
     spaces?.users.forEach((user) => {
@@ -285,7 +294,7 @@ export default class SpaceManager {
             JSON.stringify({
               type: `new-vote/${spaceId}`,
               data: { vote, streamId, votedBy, spaceId },
-            })
+            }),
           );
         } catch (err) {
           console.warn("failed to send new-vote", err);
@@ -301,7 +310,7 @@ export default class SpaceManager {
         ws.send(
           JSON.stringify({
             type: `play-next/${spaceId}`,
-          })
+          }),
         );
       });
     });
@@ -318,15 +327,17 @@ export default class SpaceManager {
           JSON.stringify({
             type: "error",
             data: { message: "You can't perform this action." },
-          })
-        )
+          }),
+        ),
       );
       return;
     }
 
     const mostUpvotedStream = await this.prisma.stream.findFirst({
       where: { played: false, spaceId },
-      orderBy: { upvotes: { _count: "desc" } },
+      orderBy: {
+        upvotes: "desc",
+      },
     });
 
     if (!mostUpvotedStream) {
@@ -335,8 +346,8 @@ export default class SpaceManager {
           JSON.stringify({
             type: "error",
             data: { message: "Please add video in queue" },
-          })
-        )
+          }),
+        ),
       );
       return;
     }
@@ -358,13 +369,13 @@ export default class SpaceManager {
     if (!isNaN(previousQueueLength) && previousQueueLength > 0) {
       await this.redisClient.set(
         `queue-length-${spaceId}`,
-        String(previousQueueLength - 1)
+        String(previousQueueLength - 1),
       );
     }
 
     await this.publisher.publish(
       spaceId,
-      JSON.stringify({ type: "play-next" })
+      JSON.stringify({ type: "play-next" }),
     );
   }
 
@@ -372,7 +383,7 @@ export default class SpaceManager {
     userID: string,
     streamId: string,
     vote: string,
-    spaceId: string
+    spaceId: string,
   ) {
     try {
       const creatorID = this.spaces.get(spaceId)?.creatorId;
@@ -382,24 +393,24 @@ export default class SpaceManager {
 
       if (vote === "upvote") {
         await this.prisma.upvote.create({
-          data: { id: crypto.randomUUID(), userID, streamId },
+          data: { id: crypto.randomUUID(), userId: userID, streamId },
         });
       } else {
         await this.prisma.upvote.delete({
-          where: { userId_streamId: { userID, streamId } },
+          where: { userId_streamId: { userId: userID, streamId } },
         });
       }
 
       await this.redisClient.set(
         `lastVoted-${spaceId}-${userID}`,
-        String(Date.now())
+        String(Date.now()),
       );
       await this.publisher.publish(
         spaceId,
         JSON.stringify({
           type: "new-vote",
           data: { streamId, vote, votedBy: userID },
-        })
+        }),
       );
     } catch (err) {
       console.error("adminCastVote error", err);
@@ -410,7 +421,7 @@ export default class SpaceManager {
     userID: string,
     streamID: string,
     vote: "up" | "down",
-    spaceID: string
+    spaceID: string,
   ) {
     let space = this.spaces.get(spaceID);
     let currentuser = this.users.get(userID);
@@ -425,7 +436,7 @@ export default class SpaceManager {
     }
     if (!isCreator) {
       const lastVoted = await this.redisClient.get(
-        `lastVoted-${spaceID}-${userID}`
+        `lastVoted-${spaceID}-${userID}`,
       );
       if (lastVoted) {
         currentuser.ws.forEach((ws) =>
@@ -433,8 +444,8 @@ export default class SpaceManager {
             JSON.stringify({
               type: "error",
               data: { message: "You can vote after 20 mins" },
-            })
-          )
+            }),
+          ),
         );
         return;
       }
@@ -466,7 +477,7 @@ export default class SpaceManager {
     spaceID: string,
     userID: string,
     url: string,
-    currentStreamlength: number
+    currentStreamlength: number,
   ) {
     const room = this.spaces.get(spaceID);
     const currentUser = this.users.get(userID);
@@ -480,15 +491,15 @@ export default class SpaceManager {
           JSON.stringify({
             type: "error",
             data: { message: "Invalid YouTube URL" },
-          })
-        )
+          }),
+        ),
       );
       return;
     }
 
     await this.redisClient.set(
       `queue-length-${spaceID}`,
-      String(currentStreamlength + 1)
+      String(currentStreamlength + 1),
     );
 
     const res = await youtubesearchapi.GetVideoDetails(extractedId);
@@ -498,8 +509,8 @@ export default class SpaceManager {
           JSON.stringify({
             type: "error",
             data: { message: "Video not found" },
-          })
-        )
+          }),
+        ),
       );
       return;
     }
@@ -516,19 +527,21 @@ export default class SpaceManager {
         type: "Youtube",
         addedBy: userID,
         title: res.title ?? "Cant find video",
-        smallImg:
+        smallThumbnail:
           thumbnails.length > 1
             ? thumbnails[thumbnails.length - 2].url
             : (thumbnails[thumbnails.length - 1]?.url ?? ""),
-        bigImg: thumbnails[thumbnails.length - 1]?.url ?? "",
+        largeThumbnail: thumbnails[thumbnails.length - 1]?.url ?? "",
         spaceId: spaceID,
+        active: true,
+        upvotes: 0,
       },
     });
 
     await this.redisClient.set(`${spaceID}-${url}`, String(Date.now()));
     await this.redisClient.set(
       `lastAdded-${spaceID}-${userID}`,
-      String(Date.now())
+      String(Date.now()),
     );
 
     await this.publisher.publish(
@@ -536,7 +549,7 @@ export default class SpaceManager {
       JSON.stringify({
         type: "new-stream",
         data: { ...stream, hasUpvoted: false, upvotes: 0 },
-      })
+      }),
     );
   }
 
@@ -557,28 +570,28 @@ export default class SpaceManager {
           JSON.stringify({
             type: "error",
             data: { message: "Invalid YouTube URL" },
-          })
-        )
+          }),
+        ),
       );
       return;
     }
 
     let previousQueueLengthStr = await this.redisClient.get(
-      `queue-length-${spaceId}`
+      `queue-length-${spaceId}`,
     );
     let previousQueueLength = previousQueueLengthStr
       ? parseInt(previousQueueLengthStr, 10)
       : 0;
 
     if (!previousQueueLength) {
-      previousQueueLength = await this.prisma.space.count({
-        where: { spaceId, played: false },
+      previousQueueLength = await this.prisma.stream.count({
+        where: { spaceId: spaceId, played: false },
       });
     }
 
     if (!isCreator) {
       const lastAdded = await this.redisClient.get(
-        `lastAdded-${spaceId}-${currentUserId}`
+        `lastAdded-${spaceId}-${currentUserId}`,
       );
       if (lastAdded) {
         currentUser.ws.forEach((ws) =>
@@ -586,8 +599,8 @@ export default class SpaceManager {
             JSON.stringify({
               type: "error",
               data: { message: "You can add again after 20 min." },
-            })
-          )
+            }),
+          ),
         );
         return;
       }
@@ -599,8 +612,8 @@ export default class SpaceManager {
             JSON.stringify({
               type: "error",
               data: { message: "This song is blocked for 1 hour" },
-            })
-          )
+            }),
+          ),
         );
         return;
       }
@@ -611,8 +624,8 @@ export default class SpaceManager {
             JSON.stringify({
               type: "error",
               data: { message: "Queue limit reached" },
-            })
-          )
+            }),
+          ),
         );
         return;
       }
@@ -646,7 +659,7 @@ export default class SpaceManager {
       const space = this.spaces.get(spaceId);
       if (space) {
         const updatedUsers = new Map(
-          Array.from(space.users).filter(([usrId]) => userId !== usrId)
+          Array.from(space.users).filter(([usrId]) => userId !== usrId),
         );
         this.spaces.set(spaceId, { ...space, users: updatedUsers });
       }

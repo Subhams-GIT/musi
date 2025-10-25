@@ -1,5 +1,3 @@
-
-import prisma from './client'
-export type  { PrismaClient } from '@prisma/client';
-export default prisma;            // default export: the client
-// export type PrismaClient from ''        // named export: the class
+import prisma from "./client";
+export { PrismaClient } from "../generated/prisma";
+export default prisma;

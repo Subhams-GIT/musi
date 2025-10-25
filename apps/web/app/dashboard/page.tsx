@@ -1,5 +1,5 @@
 "use client";
-import { LogOutIcon, Music, Play, Plus } from "lucide-react";
+import { LogOutIcon, Music, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { UserStatus, Spaces } from "../../utils/types";
 import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
@@ -7,9 +7,8 @@ import NavBar from "../../Components/NavBar";
 import useWindow from "../../hooks/window-hook";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useDataFetching } from "../../hooks/data-fetchinghook";
 
-export default function page() {
+export default function Page() {
   const session = useSession();
   const [open, setopen] = useState(false);
   const [userStatus, setUserStatus] = useState<UserStatus>({
@@ -17,187 +16,178 @@ export default function page() {
     "total Participants": 0,
     "total Streams Attended": 0,
   });
+  const [history, sethistory] = useState<Spaces[]>([]);
   const router = useRouter();
+
   useEffect(() => {
-    if (!session.data?.user.id) router.replace("/");
     function fetchData() {
       fetch("http://localhost:3000/api/userStatus").then((d) => {
         d.json().then((d) => {
-            console.log(d.userStatus)
+          console.log(d.userStatus);
           setUserStatus({
             "total Participants": d.userStatus.totalStreamsDone,
             "total Streams Attended": d.userStatus.totalStreamsAttended,
             "total Streams Done": d.userStatus.PreviousSpaces,
           });
+          sethistory(d.userStatus.spaces);
         });
       });
     }
     fetchData();
   }, []);
-  
+
   console.log(session.data?.user.id);
-  const [history, sethistory] = useState<Spaces[]>([
-    {
-      id: "1",
-      name: "Morning Vibes",
-      streams: [],
-      hostId: "u1",
-      hostName: "Alice",
-      isActive: false,
-      totalStreamTime: 0,
-    },
-    {
-      id: "2",
-      name: "Chill Beats",
-      streams: [],
-      hostId: "u2",
-      hostName: "Bob",
-      isActive: false,
-      totalStreamTime: 0,
-    },
-  ]);
 
   const windowsize = useWindow();
 
   if (windowsize < 768) {
     return (
-      <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
+      <div className="bg-black text-white min-h-screen w-full flex flex-col gap-10 p-6 md:p-10">
         <NavBar setopen={setopen} open={open} title="Stream Sync" />
         {open && <Mobile_sidebar setmopen={setopen} mobopen={open} />}
-        {/*user stats*/}
 
-        <div className="flex flex-col justify-between items-between">
+        {/* User stats */}
+        <div className="flex flex-col gap-6">
           <section className="text-left">
-            <section className="text-2xl font-semibold ">
+            <h1 className="text-2xl font-semibold mb-2">
               Welcome back to StreamSync
-            </section>
-            <section className="text-gray-400">
+            </h1>
+            <p className="text-gray-400">
               Manage your music streams and create collaborative playlists
-            </section>
+            </p>
           </section>
-          <section className="grid grid-cols-1 grid-rows-3 md:grid-cols-3 md:grid-rows-1 gap-4 my-4">
+
+          <section className="grid grid-cols-1 gap-4">
             {(Object.keys(userStatus) as (keyof UserStatus)[]).map((key) => (
-              <section
+              <div
                 key={key}
-                className=" w-fit-content flex flex-col text-gray-200 md:h-20 md:w-fit-content gap-4 justify-center items-center border border-gray-700 rounded-lg p-4"
+                className="flex flex-col text-gray-200 gap-2 justify-center items-center border border-gray-700 rounded-lg p-4"
               >
-                <span className="text-shadow-md">{key}</span>
-                <span className="text-gray-400">{userStatus[key]}</span>
-              </section>
+                <span className="text-sm font-medium">{key}</span>
+                <span className="text-2xl font-bold text-white">
+                  {userStatus[key]}
+                </span>
+              </div>
             ))}
           </section>
         </div>
 
-        {/*previous streams*/}
-        <div className="flex flex-col gap-5 items-start w-full justify-between rounded-md py-2 px-2 ">
-          <section className="flex gap-2 w-full justify-between items-center">
-            <section className="flex flex-col  justify-center items-start gap-1 ">
-              <span className="text-xl md:text-2xl ">Previous Streams</span>
-              <span className="text-gray-400 ">
+        {/* Previous streams */}
+        <div className="flex flex-col gap-5">
+          <section className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-xl font-semibold">Previous Streams</h2>
+              <p className="text-sm text-gray-400">
                 Your recently completed streaming sessions
-              </span>
-            </section>
-            <button className=" rounded-md px-2 py-1 w-fit bg-black text-white border-1 text-sm md:text-md text-wrap">
+              </p>
+            </div>
+            <button className="rounded-md px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 text-sm whitespace-nowrap transition-colors">
               View All
             </button>
           </section>
-          <section className="flex flex-col gap-5 w-full rounded-lg p-5">
+
+          <section className="flex flex-col gap-4">
             {history.map((space, index) => (
               <div
                 key={index}
-                className="flex justify-start items-center text-left border border-gray-700 rounded-md p-3"
+                className="flex items-center gap-3 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors"
               >
-                <section>
-                  <Play />
-                </section>
-                <section className=" mx-3  flex flex-col items-start text-left justify-center gap-2 ">
-                  <span className="font-semibold">{space.name}</span>
-                  <section className="flex gap-2 justify-center items-center">
+                <div className="flex-shrink-0">
+                  <Play className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <span className="font-semibold truncate">{space.name}</span>
+                  <div className="flex flex-col sm:flex-row sm:gap-4 gap-1 text-sm">
                     <span className="text-gray-400">{space.hostName}</span>
                     <span className="text-gray-400">
-                      {"status: " + (space.isActive ? "Active" : "Inactive")}
+                      Status: {space.isActive ? "Active" : "Inactive"}
                     </span>
-                  </section>
-                </section>
+                  </div>
+                </div>
               </div>
             ))}
           </section>
         </div>
       </div>
     );
-  } else
+  } else {
     return (
-      <div className="flex ">
-        <SideBar />{" "}
-        <div className="bg-black text-white w-screen h-full md:h-screen flex flex-col gap-10 p-10 overflow-hidden">
-          <nav className="flex justify-between items-center border-b border-gray-700 pb-4 static">
-            <section className="flex gap-x-1 ">
-              <Music /> StreamSync
-            </section>
+      <div className="flex min-h-screen bg-black">
+        <SideBar />
+
+        <div className="flex-1 text-white flex flex-col gap-10 p-10 overflow-auto">
+          <nav className="flex justify-between items-center border-b border-gray-700 pb-4">
+            <div className="flex gap-2 items-center text-lg font-semibold">
+              <Music className="w-6 h-6" />
+              <span>StreamSync</span>
+            </div>
             <button
-              className=" w-fit text-sm md:text-md flex items-center cursor-pointer  bg-white rounded-md px-1 py-1 md:px-4  text-black"
+              className="flex items-center gap-2 bg-white hover:bg-gray-100 rounded-md px-4 py-2 text-black text-sm font-medium transition-colors cursor-pointer"
               onClick={() => signOut()}
             >
-              <LogOutIcon className="h-4 w-4 mr-2" />
-              SignOut
+              <LogOutIcon className="h-4 w-4" />
+              Sign Out
             </button>
           </nav>
 
-          {/*user stats*/}
-
-          <div className="flex flex-col justify-between items-between">
+          {/* User stats */}
+          <div className="flex flex-col gap-6">
             <section className="text-left">
-              <section className="text-2xl font-semibold ">
+              <h1 className="text-2xl font-semibold mb-2">
                 Welcome back to StreamSync
-              </section>
-              <section className="text-gray-400">
+              </h1>
+              <p className="text-gray-400">
                 Manage your music streams and create collaborative playlists
-              </section>
+              </p>
             </section>
-            <section className="grid grid-cols-1 grid-rows-3 md:grid-cols-3 md:grid-rows-1 gap-4 my-4">
+
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {(Object.keys(userStatus) as (keyof UserStatus)[]).map((key) => (
-                <section
+                <div
                   key={key}
-                  className=" w-fit-content flex flex-col text-gray-200 md:h-20 md:w-fit-content gap-4 justify-center items-center border border-gray-700 rounded-lg p-4"
+                  className="flex flex-col text-gray-200 gap-2 justify-center items-center border border-gray-700 rounded-lg p-6"
                 >
-                  <span className="text-shadow-md">{key}</span>
-                  <span className="text-gray-400">{userStatus[key]}</span>
-                </section>
+                  <span className="text-sm font-medium text-center">{key}</span>
+                  <span className="text-3xl font-bold text-white">
+                    {userStatus[key]}
+                  </span>
+                </div>
               ))}
             </section>
           </div>
 
-          {/*previous streams*/}
-          <div className="flex flex-col gap-5 items-start w-full justify-between rounded-md py-2 px-2 ">
-            <section className="flex gap-2 w-full justify-between items-center">
-              <section className="flex flex-col  justify-center items-start gap-1 ">
-                <span className="text-xl md:text-2xl ">Previous Streams</span>
-                <span className="text-gray-400 ">
+          {/* Previous streams */}
+          <div className="flex flex-col gap-5">
+            <section className="flex gap-4 justify-between items-center">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-semibold">Previous Streams</h2>
+                <p className="text-gray-400">
                   Your recently completed streaming sessions
-                </span>
-              </section>
-              <button className=" rounded-md px-2 py-1 w-fit bg-black text-white border-1 text-sm md:text-md text-wrap">
+                </p>
+              </div>
+              <button className="rounded-md px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 text-sm whitespace-nowrap transition-colors">
                 View All
               </button>
             </section>
-            <section className="flex flex-col gap-5 w-full rounded-lg p-5">
+
+            <section className="flex flex-col gap-4">
               {history.map((space, index) => (
                 <div
                   key={index}
-                  className="flex justify-start items-center text-left border border-gray-700 rounded-md p-3"
+                  className="flex items-center gap-4 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors"
                 >
-                  <section>
-                    <Play />
-                  </section>
-                  <section className=" mx-3  flex flex-col items-start text-left justify-center gap-2 ">
-                    <span className="font-semibold">{space.name}</span>
-                    <section className="flex gap-2 justify-center items-center">
+                  <div className="flex-shrink-0">
+                    <Play className="w-6 h-6" />
+                  </div>
+                  <div className="flex flex-col gap-2 min-w-0">
+                    <span className="font-semibold text-lg">{space.name}</span>
+                    <div className="flex gap-6 text-sm">
                       <span className="text-gray-400">{space.hostName}</span>
                       <span className="text-gray-400">
-                        {"status: " + (space.isActive ? "Active" : "Inactive")}
+                        Status: {space.isActive ? "Active" : "Inactive"}
                       </span>
-                    </section>
-                  </section>
+                    </div>
+                  </div>
                 </div>
               ))}
             </section>
@@ -205,4 +195,5 @@ export default function page() {
         </div>
       </div>
     );
+  }
 }

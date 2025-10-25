@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "You must be logged in to create a space" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!data.spaceName) {
       return NextResponse.json(
         { success: false, message: "Space name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -56,14 +56,14 @@ export async function POST(req: NextRequest) {
       },
     });
     return NextResponse.json(
-      { success: true, message: "Space created successfully", link},
-      { status: 201 }
+      { success: true, message: "Space created successfully", link },
+      { status: 201 },
     );
   } catch (error: any) {
     if (error.message === "Unauthenticated Request") {
       return NextResponse.json(
         { success: false, message: "You must be logged in to create a space" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         success: false,
         message: `An unexpected error occurred: ${error.message}`,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -85,14 +85,14 @@ export async function DELETE(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "You must be logged in to delete a space" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     if (!spaceId) {
       return NextResponse.json(
         { success: false, message: "Space Id is required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
     console.log(spaceId);
@@ -103,7 +103,7 @@ export async function DELETE(req: NextRequest) {
     if (!space) {
       return NextResponse.json(
         { success: false, message: "Space not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -113,7 +113,7 @@ export async function DELETE(req: NextRequest) {
           success: false,
           message: "You are not authorized to delete this space",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -123,13 +123,13 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: "Space deleted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     console.error("Error deleting space:", error);
     return NextResponse.json(
       { success: false, message: `Error deleting space: ${error.message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
           success: false,
           message: "You must be logged in to retrieve space information",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
     const spaceId = req.nextUrl.searchParams.get("spaceId");
@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
       if (!space) {
         return NextResponse.json(
           { success: false, message: "Space not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -171,7 +171,7 @@ export async function GET(req: NextRequest) {
           message: "Host ID retrieved successfully",
           space: space,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -217,13 +217,13 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: "Spaces retrieved successfully", returnSpaces },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     console.error("Error retrieving space:", error);
     return NextResponse.json(
       { success: false, message: `Error retrieving space: ${error.message}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

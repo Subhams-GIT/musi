@@ -15,7 +15,7 @@ import {
   Volume2,
 } from "lucide-react";
 import useWindow from "@/hooks/window-hook";
-import { useActionState, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import NavBar from "@/Components/NavBar";
 import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
 import { useSearchParams } from "next/navigation";
@@ -92,41 +92,50 @@ export default function StreamPageStatic() {
   const windowsize = useWindow();
   const [open, setopen] = useState(false);
   const [streams, setstreams] = useState([]);
-  const [currentstream, setcurrentstream] = useState<currentStream>({id:"",userId:"",spaceId:"",streamId:""});
+  const [currentstream, setcurrentstream] = useState<currentStream>({
+    id: "",
+    userId: "",
+    spaceId: "",
+    streamId: "",
+  });
   const [participant, setparticipants] = useState([]);
-  const [space,setspace]=useState<{name:string,description:string}>();
-  let showAddSong=false
-  let showAddUser=false;
+  const [space, setspace] = useState<{ name: string; description: string }>();
+  let showAddSong = false;
+  let showAddUser = false;
   useEffect(() => {
     async function joinRoom() {
       if (!token) return;
+      setTimeout(() => {});
       try {
         const space = await axios.post(
-          `http://localhost:3000/api/spaces/join?t=${token}`
+          `http://localhost:3000/api/spaces/join?t=${token}`,
         );
-        console.log(space)
+        console.log(session.data && session.data.user.id);
+        console.log(space);
         ws?.current?.send(
           JSON.stringify({
             type: "join-room",
             data: { token, ws, userId: session.data?.user.id },
-          })
+          }),
         );
         setstreams(space.data.space.streams);
         setcurrentstream(space.data.space.currentStream.streamId);
         setparticipants(space.data.space.participants);
-        setspace({name:space.data.space.name,description:space.data.space.description})
-
+        setspace({
+          name: space.data.space.name,
+          description: space.data.space.description,
+        });
       } catch (error) {
         console.error(error);
       }
     }
     joinRoom();
-  }, []);
+  }, [ws, session.data, token]);
   return (
     <div className="flex min-h-screen bg-gray-50 ">
       {windowsize < 768 ? (
         <div className="w-full fixed left-0 top-0 z-10 text-white pt-5 px-4 bg-black">
-          <NavBar open={open} setopen={setopen} title={space?.name??""} />
+          <NavBar open={open} setopen={setopen} title={space?.name ?? ""} />
           <Mobile_sidebar setmopen={setopen} mobopen={open} />
         </div>
       ) : (
@@ -155,7 +164,7 @@ export default function StreamPageStatic() {
                 <Share />
                 Share
               </button>
-              {currentstream.userId===session.data?.user.id && (
+              {currentstream.userId === session.data?.user.id && (
                 <>
                   <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     <Users />
@@ -229,9 +238,7 @@ export default function StreamPageStatic() {
 
                       {/* Progress Bar */}
                       <div className="space-y-2">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                         
-                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"></div>
                         <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                           <span>1:32</span>
                           <span>{currentSong?.duration}</span>
@@ -243,7 +250,7 @@ export default function StreamPageStatic() {
                         <button className="h-12 w-12 flex items-center justify-center border rounded-full text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                           {currentSong?.isPlaying ? <Pause /> : <Play />}
                         </button>
-                        {currentstream.userId===session.data?.user.id && (
+                        {currentstream.userId === session.data?.user.id && (
                           <button className="h-12 w-12 flex items-center justify-center border rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                             <SkipForward />
                           </button>
