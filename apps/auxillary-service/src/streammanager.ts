@@ -103,6 +103,13 @@ export default class SpaceManager {
     await this.redisClient.connect();
     await this.publisher.connect();
     await this.consumer.connect();
+    this.consumer.on("error", (err) => console.error("Redis consumer error:", err));
+    
+      // subscribe to all active spaces (or dynamically later)
+      // Example: subscribe to every channel that matches spaceID
+      await this.consumer.pSubscribe("*", (message, channel) => {
+        this.onSubscribeRoom(message, channel);
+      });
   }
 
   onSubscribeRoom(message: string, spaceID: string) {
@@ -443,6 +450,7 @@ export default class SpaceManager {
 
   publishNewStream(spaceId: string, data: any) {
     const space = this.spaces.get(spaceId);
+    console.log("space reached!")
     if (space) {
       try{
         space.users.forEach(user=>{

@@ -40,7 +40,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 
     socket.onclose = () => {
       console.warn('⚠️ WebSocket closed. Reconnecting in 3s...');
-      reconnectTimeout.current = setTimeout(() => connect(), 3000);
+      reconnectTimeout.current = setTimeout(connect, 3000);
     };
   }, []);
 

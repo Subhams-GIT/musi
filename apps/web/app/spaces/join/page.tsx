@@ -61,7 +61,7 @@ export default function StreamPageStatic() {
 
   const currentSong = streams[0];
 
-  // ✅ Join space when token changes
+
   useEffect(() => {
     if (!token) return;
 
@@ -83,7 +83,6 @@ export default function StreamPageStatic() {
           link: data.link,
         });
 
-        // ✅ Join WebSocket room
         context?.sendMessage(
           JSON.stringify({
             type: "join-room",
@@ -98,9 +97,9 @@ export default function StreamPageStatic() {
     };
 
     joinRoom();
-  }, [token, context?.ws, user?.id]);
+  }, [token, context, user?.id]);
 
-  // ✅ WebSocket listener
+
   useEffect(() => {
     if (!context?.ws.current) return;
 
@@ -112,7 +111,7 @@ export default function StreamPageStatic() {
         switch (type) {
           case `new-stream/${space.id}`:
             console.log(data);
-            setStreams((prev) => [...prev, data.stream]);
+            setStreams((prev) => [...prev, data]);
             break;
 
           case `user-joined/${space.id}`:
@@ -142,7 +141,7 @@ export default function StreamPageStatic() {
 
   const addToQueue = useCallback(() => {
     if (!url.trim() || !space.id || !user?.id) return;
-
+    console.log(context);
     setLoading(true);
     context?.sendMessage(
       JSON.stringify({
@@ -152,12 +151,12 @@ export default function StreamPageStatic() {
     );
     setUrl("");
     setLoading(false);
-  }, [context?.ws, url, space.id, user?.id]);
+  }, [url, space.id, user?.id,context]);
 
-  // ✅ Loading state
+  
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-white">
+      <div className="flex items-center justify-center h-screen bg-gray-900 text-white italic animate-pulse">
         Joining...
       </div>
     );
@@ -180,7 +179,7 @@ export default function StreamPageStatic() {
       {/* Main content */}
       <main
         className={`flex-1 overflow-auto ${
-          windowSize < 768 ? "pt-15" : "pt-25 pl-20"
+          windowSize < 768 ? "pt-15" : "pl-20"
         } min-h-screen bg-black text-black h-full`}
       >
         <div className="p-6">
