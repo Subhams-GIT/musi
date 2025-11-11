@@ -5,15 +5,10 @@ import dotenv from "dotenv";
 import SpaceManager from "./streammanager.js";
 //@ts-ignore
 import jwt from "jsonwebtoken";
-import { fileURLToPath } from "url";
-import path from "path";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, "../.env");
 
-dotenv.config({ path: envPath });
+dotenv.config();
 const cors = 1;
-console.log(process.env.NEXTAUTH_SECRET);
+// console.log(process.env.NEXTAUTH_SECRET);
 if (cluster.isPrimary) {
   for (let i = 0; i < cors; i++) {
     cluster.fork();

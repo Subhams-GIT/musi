@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
-  "type": "module",
   "scripts": {
-    "start": "nodemon --watch src --ext ts,js --exec \"node --loader ts-node/esm src/index.ts\"",
-    "build": "tsc -b ",
-    "dev": "pnpm run predev && tsx src/index.ts",
+    "start": "tsc -b && nodemon dist/index.js",
+    "build": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --format=cjs",
+    "dev": "pnpm dlx nodemon --exec \"pnpm run build && node dist/index.js\" --watch src --ext ts",
     "predev": "pnpm --filter @repo/db run build",
     "check-types": "tsc --noEmit"
+   
   },
   "keywords": [],
   "author": "",
@@ -32,6 +32,7 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }

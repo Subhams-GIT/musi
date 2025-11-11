@@ -1,11 +1,12 @@
 import WebSocket from "ws";
 import { createClient, RedisClientType } from "redis";
-import youtubesearchapi from "youtube-search-api";
+import {GetVideoDetails} from "youtube-search-api";
 import { Job, Queue, Worker } from "bullmq";
 import { checkforurl } from "./util.js";
-import prisma, { PrismaClient } from "@repo/db";
+import prisma from "@repo/db";
+import { user } from "./types.js";
 
-const MAX_QUEUE_LENGTH = 5;
+const MAX_QUEUE_LENGTH = 20;
 const connection = {
   host: "localhost",
   port: 6379,
@@ -16,7 +17,7 @@ const redisCredentials = {
 
 type User = {
   userId: string;
-  ws: WebSocket[];
+  ws: WebSocket;
   token: string;
 };
 
@@ -32,7 +33,7 @@ export default class SpaceManager {
   public redisClient: RedisClientType;
   public publisher: RedisClientType;
   public consumer: RedisClientType;
-  public prisma: PrismaClient;
+  public prisma: typeof prisma;
   public queue: Queue;
   public worker: Worker;
   public wstoSpace: Map<WebSocket, string>;
@@ -44,7 +45,7 @@ export default class SpaceManager {
     this.publisher = createClient(redisCredentials);
     this.consumer = createClient(redisCredentials);
     let globalForPrisma = global as unknown as {
-      auxServicePrisma: PrismaClient;
+      auxServicePrisma: typeof prisma;
     };
     this.prisma = prisma;
     this.queue = new Queue(process.pid.toString(), {
@@ -52,13 +53,12 @@ export default class SpaceManager {
     });
     this.worker = new Worker(
       process.pid.toString(),
-      async (job: Job) => await this.processJob(job),
+      async (job: Job) => this.processJob(job),
       {
         connection,
       },
     );
     this.wstoSpace = new Map();
-    console.log(this.prisma);
   }
 
   static getInstance() {
@@ -148,13 +148,13 @@ export default class SpaceManager {
     if (!user) {
       this.users.set(userID, {
         userId: userID,
-        ws: [ws],
+        ws: ws,
         token,
       });
       user = this.users.get(userID);
     } else {
-      if (user.ws.some((w: WebSocket) => w === ws)) {
-        user.ws.push(ws);
+      if (user.ws=== ws) {
+        user.ws=ws;
       }
     }
 
@@ -168,16 +168,20 @@ export default class SpaceManager {
         creatorId: creatorID,
       });
     }
-    const joineduser = await this.prisma.user.findFirst({
+    const joineduser: user | null = await this.prisma.user.findFirst({
       where: {
         id: userID,
       },
     });
+    if (!joineduser) {
+      return new Error("couldnot find user");
+    }
+    const name = joineduser.name;
     this.spaces.forEach((space) => {
       if (space.creatorId === creatorID) {
         space.users.forEach((user) => {
-          user.ws[user.ws.length - 1].send(
-            JSON.stringify({ type: "joined-space", data: { joineduser } }),
+          user.ws.send(
+            JSON.stringify({ type: "joined-space", data: { name } }),
           );
         });
       }
@@ -195,10 +199,9 @@ export default class SpaceManager {
 
     try {
       space.users.forEach((user) => {
-        user.ws.forEach((ws) => {
-          ws.send(JSON.stringify({ type: `empty-queue/${spaceID}` }));
-        });
-      });
+        user.ws.send(JSON.stringify({ type: `empty-queue/${spaceID}` }));
+        }
+      );
     } catch (err) {
       console.warn("Failed to send empty-queue to ws", err);
     }
@@ -231,19 +234,16 @@ export default class SpaceManager {
   publishRemoveSong(spaceId: string, streamId: string) {
     const space = this.spaces.get(spaceId);
     space?.users.forEach((user) => {
-      user.ws.forEach((ws) => {
-        try {
-          ws.send(
-            JSON.stringify({
-              type: `remove-song/${spaceId}`,
-              data: { streamId, spaceId },
-            }),
-          );
-        } catch (err) {
-          console.warn("failed to send remove-song", err);
-        }
-      });
-    });
+      try{
+        user.ws.send(JSON.stringify({
+          type: `remove-song/${spaceId}`,
+          data: { streamId, spaceId },
+        }))
+      }
+      catch(e){
+
+      }
+    })
   }
 
   async adminRemoveSong(spaceId: string, userId: string, streamId: string) {
@@ -267,8 +267,7 @@ export default class SpaceManager {
         }),
       );
     } else {
-      user?.ws.forEach((ws) => {
-        ws.send(
+      user?.ws.send(
           JSON.stringify({
             type: "error",
             data: {
@@ -276,9 +275,8 @@ export default class SpaceManager {
             },
           }),
         );
-      });
+      }
     }
-  }
 
   publishNewVote(
     spaceId: string,
@@ -287,34 +285,25 @@ export default class SpaceManager {
     votedBy: string,
   ) {
     const spaces = this.spaces.get(spaceId);
-    spaces?.users.forEach((user) => {
-      user.ws.forEach((ws) => {
-        try {
-          ws.send(
-            JSON.stringify({
-              type: `new-vote/${spaceId}`,
-              data: { vote, streamId, votedBy, spaceId },
-            }),
-          );
-        } catch (err) {
-          console.warn("failed to send new-vote", err);
-        }
-      });
-    });
+    try{
+      spaces?.users.forEach((user)=>{
+        user.ws.send(JSON.stringify({type:`new-vote/${spaceId}`,data:{vote,streamId,votedBy,spaceId}}))
+      })
+    }catch(err){
+      console.warn("failed to send new-vote",err);
+    }
   }
 
   publishPlayNext(spaceId: string) {
     const space = this.spaces.get(spaceId);
     space?.users.forEach((user, userId) => {
-      user?.ws.forEach((ws) => {
-        ws.send(
+      user?.ws.send(
           JSON.stringify({
             type: `play-next/${spaceId}`,
           }),
         );
       });
-    });
-  }
+    }
 
   async PlayNext(spaceId: string, userId: string) {
     const creatorId = this.spaces.get(spaceId)?.creatorId;
@@ -322,14 +311,12 @@ export default class SpaceManager {
     if (!targetUser) return;
 
     if (targetUser.userId !== creatorId) {
-      targetUser.ws.forEach((ws) =>
-        ws.send(
+      targetUser.ws.send(
           JSON.stringify({
             type: "error",
             data: { message: "You can't perform this action." },
           }),
-        ),
-      );
+        )
       return;
     }
 
@@ -341,14 +328,12 @@ export default class SpaceManager {
     });
 
     if (!mostUpvotedStream) {
-      targetUser.ws.forEach((ws) =>
-        ws.send(
+      targetUser.ws.send(
           JSON.stringify({
             type: "error",
             data: { message: "Please add video in queue" },
           }),
-        ),
-      );
+        )
       return;
     }
 
@@ -421,8 +406,7 @@ export default class SpaceManager {
     userID: string,
     streamID: string,
     vote: "up" | "down",
-    spaceID: string,
-  ) {
+    spaceID: string,) {
     let space = this.spaces.get(spaceID);
     let currentuser = this.users.get(userID);
     let creatorID = this.spaces.get(spaceID)?.creatorId;
@@ -439,14 +423,12 @@ export default class SpaceManager {
         `lastVoted-${spaceID}-${userID}`,
       );
       if (lastVoted) {
-        currentuser.ws.forEach((ws) =>
-          ws.send(
+        currentuser.ws.send(
             JSON.stringify({
               type: "error",
               data: { message: "You can vote after 20 mins" },
             }),
-          ),
-        );
+          )
         return;
       }
     }
@@ -462,62 +444,59 @@ export default class SpaceManager {
   publishNewStream(spaceId: string, data: any) {
     const space = this.spaces.get(spaceId);
     if (space) {
-      space.users.forEach((user) => {
-        user.ws.forEach((ws) => {
-          try {
-            ws.send(JSON.stringify({ type: `new-stream/${spaceId}`, data }));
-          } catch (err) {
-            console.warn("failed new-stream send", err);
-          }
-        });
-      });
+      try{
+        space.users.forEach(user=>{
+          user.ws.send(JSON.stringify({type:`new-stream/${spaceId}`,data}))
+        })
+      }catch(err){
+       console.warn(err); 
+      }
     }
   }
+  
   async addStream(
     spaceID: string,
     userID: string,
     url: string,
-    currentStreamlength: number,
-  ) {
+    currentStreamlength: number) {
     const room = this.spaces.get(spaceID);
     const currentUser = this.users.get(userID);
-
+    console.log('reached')
     if (!room || typeof currentStreamlength !== "number") return;
 
     const extractedId = url.split("?v=")[1];
     if (!extractedId) {
-      currentUser?.ws.forEach((ws) =>
-        ws.send(
+      currentUser?.ws.send(
           JSON.stringify({
             type: "error",
             data: { message: "Invalid YouTube URL" },
           }),
-        ),
-      );
+        )
       return;
     }
-
+    try{
+      
+    console.log({spaceID,userID,url,currentStreamlength})
     await this.redisClient.set(
       `queue-length-${spaceID}`,
       String(currentStreamlength + 1),
     );
-
-    const res = await youtubesearchapi.GetVideoDetails(extractedId);
+    GetVideoDetails(extractedId)
+    const res = await GetVideoDetails(extractedId);
+    console.log({res});
     if (!res || !res.thumbnail) {
-      currentUser?.ws.forEach((ws) =>
-        ws.send(
+      currentUser?.ws.send(
           JSON.stringify({
             type: "error",
             data: { message: "Video not found" },
           }),
-        ),
-      );
+        )
       return;
     }
 
     const thumbnails = res.thumbnail.thumbnails || [];
     thumbnails.sort((a: any, b: any) => (a.width < b.width ? -1 : 1));
-
+    console.log('stream pre-creation')
     const stream = await this.prisma.stream.create({
       data: {
         id: crypto.randomUUID(),
@@ -542,6 +521,7 @@ export default class SpaceManager {
     await this.redisClient.set(
       `lastAdded-${spaceID}-${userID}`,
       String(Date.now()),
+      {EX:1200}
     );
 
     await this.publisher.publish(
@@ -551,9 +531,13 @@ export default class SpaceManager {
         data: { ...stream, hasUpvoted: false, upvotes: 0 },
       }),
     );
+    }catch(e){
+      console.error(e)
+    }
   }
 
   async addToQueue(spaceId: string, currentUserId: string, url: string) {
+    console.log(this.queue.count)
     const space = this.spaces.get(spaceId);
     const currentUser = this.users.get(currentUserId);
     const creatorId = this.spaces.get(spaceId)?.creatorId;
@@ -565,14 +549,12 @@ export default class SpaceManager {
     }
 
     if (!checkforurl(url)) {
-      currentUser?.ws.forEach((ws) =>
-        ws.send(
+      currentUser?.ws.send(
           JSON.stringify({
             type: "error",
             data: { message: "Invalid YouTube URL" },
           }),
-        ),
-      );
+        )
       return;
     }
 
@@ -593,49 +575,35 @@ export default class SpaceManager {
       const lastAdded = await this.redisClient.get(
         `lastAdded-${spaceId}-${currentUserId}`,
       );
-      if (lastAdded) {
-        currentUser.ws.forEach((ws) =>
-          ws.send(
-            JSON.stringify({
-              type: "error",
-              data: { message: "You can add again after 20 min." },
-            }),
-          ),
-        );
-        return;
-      }
+      
 
       const alreadyAdded = await this.redisClient.get(`${spaceId}-${url}`);
       if (alreadyAdded) {
-        currentUser.ws.forEach((ws) =>
-          ws.send(
+        currentUser.ws.send(
             JSON.stringify({
               type: "error",
               data: { message: "This song is blocked for 1 hour" },
             }),
-          ),
-        );
+          )
         return;
       }
 
       if (previousQueueLength >= MAX_QUEUE_LENGTH) {
-        currentUser.ws.forEach((ws) =>
-          ws.send(
+        currentUser.ws.send(
             JSON.stringify({
               type: "error",
               data: { message: "Queue limit reached" },
             }),
-          ),
-        );
+          )
         return;
       }
     }
-
-    await this.queue.add("add-to-queue", {
+    console.log(currentUserId,spaceId,isCreator);
+    await this.queue.add("add-stream", {
       spaceId,
       userId: currentUser.userId,
       url,
-      existingActiveStream: previousQueueLength,
+      currentStreamlength: previousQueueLength,
     });
   }
 
@@ -645,13 +613,8 @@ export default class SpaceManager {
     const spaceId = this.wstoSpace.get(ws);
 
     this.users.forEach((user, id) => {
-      const wsIndex = user.ws.indexOf(ws);
-      if (wsIndex !== -1) {
-        userId = id;
-        user.ws.splice(wsIndex, 1);
-      }
-      if (user.ws.length === 0) {
-        this.users.delete(id);
+      if(user.ws!=null){
+        this.users.delete(id)
       }
     });
 

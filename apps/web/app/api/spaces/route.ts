@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     const space = await prisma.space.create({
       data: {
         name: data.spaceName,
-        hostId: session.user.id,
         description: data.description,
+        hostId:session.user.id
       },
     });
 

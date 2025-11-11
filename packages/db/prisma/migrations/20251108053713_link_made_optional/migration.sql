@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Space" ALTER COLUMN "link" DROP NOT NULL;

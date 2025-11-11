@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
-    "build": "next build",
+    "build": "pnpm --filter @repo/db generate && next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
@@ -39,6 +39,7 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
+    "react-toastify": "^11.0.5",
     "react-youtube": "^10.1.0",
     "recharts": "2.15.4",
     "sonner": "^1.7.4",
@@ -48,7 +49,8 @@
     "uuid": "^11.1.0",
     "vaul": "^0.9.9",
     "youtube-search-api": "^2.0.1",
-    "zod": "^4.0.17"
+    "zod": "^4.0.17",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

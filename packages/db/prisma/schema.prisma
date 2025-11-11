@@ -13,7 +13,7 @@ model User {
   email    String   @unique
   provider Provider
   role     Role
-  name     String?
+  name     String
   addedStreams Stream[] @relation("addedBy")
   hostedSpaces  Space[]  @relation("hostedBy")
   joinedSpaces  Space[]  @relation("spaceParticipants")
@@ -62,7 +62,7 @@ model Space {
   isActive      Boolean        @default(true)
   currentStream CurrentStream?
   participants  User[]         @relation("spaceParticipants") 
-  link          String? 
+  link          String?     
 }
 
 model Upvote {

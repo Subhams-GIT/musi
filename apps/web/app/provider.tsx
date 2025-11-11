@@ -1,5 +1,5 @@
 "use client";
-
+import { ToastContainer } from "react-toastify";
 import { SessionProvider } from "next-auth/react";
 import { ReactNode } from "react";
 import { UserProvider } from "@/Context/userContext";
@@ -9,7 +9,9 @@ export default function Provider({ children }: { children: ReactNode }) {
 
   return (
     <SessionProvider>
-      <UserProvider>{children}</UserProvider>
+      <UserProvider>{children}
+        <ToastContainer/>
+      </UserProvider>
     </SessionProvider>
   );
 }

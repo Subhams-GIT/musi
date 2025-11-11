@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           message: "Already present",
+          space,
         },
         {
           status: 200,

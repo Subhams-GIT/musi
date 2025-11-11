@@ -13,6 +13,8 @@ export type Streams = {
     id: string;
     name: string | null;
   };
+  addedBy:string,
+  played:boolean
 };
 
 export type Spaces = {
@@ -28,7 +30,7 @@ export type Spaces = {
   mysongs?: number;
   hosted?: boolean;
   totalStreamTime?: number;
-  link: string;
+  link: string|null;
 };
 
 export type UserStatus = {

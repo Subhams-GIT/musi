@@ -17,34 +17,7 @@ export default function ActiveStreams() {
   const ws = useContext(WebSocketContext);
   console.log(session);
   const router = useRouter();
-  async function joinRoom(e: React.MouseEvent) {
-    console.log("dsf");
-    if (joinlink.trim() === "" || !joinlink.includes("?t=")) return;
-    console.log("sdm");
-    try {
-      setloading(true);
-      ws?.current?.send(
-        JSON.stringify({
-          type: "join-room",
-          data: {
-            token: joinlink.split("?t=")[1],
-            ws,
-            userId: session.data?.user.id,
-          },
-        }),
-      );
-      await axios.post(
-        `http://localhost:3000/api/spaces/join?t=${joinlink.split("?t=")[1]}`,
-      );
-      setjoinLink("");
-      setloading(false);
-      router.push(joinlink);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setjoinLink("");
-    }
-  }
+
   console.log(joinlink);
   return (
     <div className="flex flex-col justify-start items-center min-h-screen w-screen overflow-y-auto  bg-black text-white ">
@@ -90,7 +63,7 @@ export default function ActiveStreams() {
         />
         <button
           disabled={loading}
-          onClick={joinRoom}
+          onClick={() => router.replace(joinlink)}
           className="w-full bg-white text-black px-2 py-1 rounded-md mt-4 cursor-pointer"
         >
           {loading ? "loading..." : "Join"}

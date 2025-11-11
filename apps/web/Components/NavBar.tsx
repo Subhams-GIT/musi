@@ -14,7 +14,10 @@ export default function NavBar(open:navbarprops){
                 <button className="cursor-pointer" onClick={()=>open.setopen(!open.open)}><MenuIcon /></button>
                 <section className="flex gap-x-1 "><Music /> {open.title}</section>
                 <button className=" w-fit text-sm md:text-md flex items-center cursor-pointer  bg-white rounded-md px-1 py-1 md:px-4  text-black"><Plus className="h-4 w-4 mr-2" 
-                onClick={()=>signOut()}/>SignOut</button>
+                onClick={()=>
+                  signOut({ redirect: false }).then(() => {
+                    window.location.reload();
+                  })}/>SignOut</button>
         </nav>
     )
 }

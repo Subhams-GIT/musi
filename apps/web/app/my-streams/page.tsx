@@ -284,7 +284,7 @@ export function Streamlayout(space: Spaces) {
       <div className=" flex justify-center w-full rounded-md  bg-white text-black ">
         <button
           className="flex justify-center items-center gap-2 px-2 py-2"
-          onClick={() => router.replace(`/active-streams/${space.id}`)}
+          onClick={() => router.push(`${space.link}`)}
         >
           <Play /> Join Stream
         </button>

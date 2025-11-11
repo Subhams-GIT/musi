@@ -39,13 +39,6 @@ export default function Page() {
         spaceName: spacename,
         description: spacedesc,
       });
-      const token = res.data.link?.split("?t=")[1];
-      ws?.current?.send(
-        JSON.stringify({
-          type: "join-room",
-          data: { ws: ws.current, userId: session.data?.user.id, token },
-        }),
-      );
       setloading(false);
       setspacelink(res.data.link);
       navigate.replace(res.data.link);
