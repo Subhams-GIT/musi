@@ -30,16 +30,14 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
       console.log('%c WebSocket connected', 'color: green');
     };
 
-    socket.onmessage = (event) => {
-      console.log('Received:', event.data);
-    };
 
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
 
     socket.onclose = () => {
-      console.warn('⚠️ WebSocket closed. Reconnecting in 3s...');
+      ws.current?.close();
+      ws.current=null;
       reconnectTimeout.current = setTimeout(connect, 3000);
     };
   }, []);

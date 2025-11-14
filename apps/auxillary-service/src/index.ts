@@ -8,12 +8,14 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 const cors = 1;
-// console.log(process.env.NEXTAUTH_SECRET);
+
 if (cluster.isPrimary) {
   for (let i = 0; i < cors; i++) {
     cluster.fork();
   }
-
+  cluster.on('online',()=>{
+    console.log('cluster is online')
+  })
   cluster.on("disconnect", () => {
     process.exit();
   });
@@ -21,8 +23,6 @@ if (cluster.isPrimary) {
   main();
 }
 
-// spaceid userid -> token , ws
-// spaceid userid -> token , ws
 type Data = {
   userId: string;
   spaceId: string;
@@ -80,7 +80,7 @@ async function handleJoinRoom(ws: WebSocket, data: Data) {
   );
 }
 
-async function processUserAction(type: string, data: Data, ws: any) {
+async function processUserAction(type: string, data: Data, ws: WebSocket) {
   switch (type) {
     case "cast-vote":
       await SpaceManager.getInstance().castVote(
@@ -121,7 +121,7 @@ async function processUserAction(type: string, data: Data, ws: any) {
         userId: data.userId,
       });
       break;
-
+      default:
       console.warn("Unknown message type:", type);
   }
 }

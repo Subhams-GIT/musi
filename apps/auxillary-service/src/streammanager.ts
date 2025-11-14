@@ -5,6 +5,7 @@ import { Job, Queue, Worker } from "bullmq";
 import { checkforurl } from "./util.js";
 import prisma from "@repo/db";
 import { user } from "./types.js";
+import { count } from "console";
 
 const MAX_QUEUE_LENGTH = 20;
 const connection = {
@@ -44,9 +45,6 @@ export default class SpaceManager {
     this.redisClient = createClient(redisCredentials);
     this.publisher = createClient(redisCredentials);
     this.consumer = createClient(redisCredentials);
-    let globalForPrisma = global as unknown as {
-      auxServicePrisma: typeof prisma;
-    };
     this.prisma = prisma;
     this.queue = new Queue(process.pid.toString(), {
       connection,
@@ -73,8 +71,9 @@ export default class SpaceManager {
 
     switch (name) {
       case "cast-vote":
-        await this.adminCastVote(
-          data.userId,
+        await this.CastVote(
+          data.creatorID,
+          data.userID,
           data.streamId,
           data.vote,
           data.spaceId,
@@ -105,12 +104,10 @@ export default class SpaceManager {
     await this.consumer.connect();
     this.consumer.on("error", (err) => console.error("Redis consumer error:", err));
     
-      // subscribe to all active spaces (or dynamically later)
-      // Example: subscribe to every channel that matches spaceID
       await this.consumer.pSubscribe("*", (message, channel) => {
         this.onSubscribeRoom(message, channel);
       });
-  }
+    }
 
   onSubscribeRoom(message: string, spaceID: string) {
     try {
@@ -143,8 +140,7 @@ export default class SpaceManager {
     creatorID: string,
     userID: string,
     ws: WebSocket,
-    token: string,
-  ) {
+    token: string) {
     console.log("joinee id ", userID);
     let space = this.spaces.get(spaceID);
     let user = this.users.get(userID);
@@ -184,17 +180,10 @@ export default class SpaceManager {
       return new Error("couldnot find user");
     }
     const name = joineduser.name;
-    this.spaces.forEach((space) => {
-      if (space.creatorId === creatorID) {
-        space.users.forEach((user) => {
-          user.ws.send(
-            JSON.stringify({ type: "joined-space", data: { name } }),
-          );
-        });
-      }
-    });
-    console.log("users", this.users);
-    console.log("spaces", this.spaces);
+    space?.users.forEach((user)=>{
+      user.ws.send(JSON.stringify({type:'joined-space',data:{name,userID}}))
+    })
+    console.log({users:this.users,spaces:this.spaces});
   }
 
   publishEmptyQueue(spaceID: string) {
@@ -248,7 +237,7 @@ export default class SpaceManager {
         }))
       }
       catch(e){
-
+        console.error(e)
       }
     })
   }
@@ -288,12 +277,14 @@ export default class SpaceManager {
   publishNewVote(
     spaceId: string,
     streamId: string,
-    vote: "upvote" | "downvote",
+    vote: "up" | "down",
     votedBy: string,
   ) {
     const spaces = this.spaces.get(spaceId);
+    console.log('publishing vote ')
     try{
       spaces?.users.forEach((user)=>{
+        console.log('sending new-vote to user',user.userId);
         user.ws.send(JSON.stringify({type:`new-vote/${spaceId}`,data:{vote,streamId,votedBy,spaceId}}))
       })
     }catch(err){
@@ -306,7 +297,7 @@ export default class SpaceManager {
     space?.users.forEach((user, userId) => {
       user?.ws.send(
           JSON.stringify({
-            type: `play-next/${spaceId}`,
+            type: `play-next/${spaceId}`, 
           }),
         );
       });
@@ -371,41 +362,56 @@ export default class SpaceManager {
     );
   }
 
-  async adminCastVote(
+  async CastVote(
+    creatorID: string,
     userID: string,
     streamId: string,
     vote: string,
     spaceId: string,
   ) {
+    console.log({creatorID,userID,streamId,vote,spaceId})
     try {
-      const creatorID = this.spaces.get(spaceId)?.creatorId;
-      if (userID !== creatorID) {
-        return new Error("you are not the creator!");
-      }
-
-      if (vote === "upvote") {
-        await this.prisma.upvote.create({
-          data: { id: crypto.randomUUID(), userId: userID, streamId },
-        });
+      const user =await this.prisma.user.findFirst({
+        where:{id:userID},
+        select:{
+          name:true
+        }
+      })
+      if (vote === "up") {
+        await this.prisma.stream.update({
+          where:{id:streamId},
+          data:{
+            upvotes:{
+              increment:1
+            }
+          }
+        }
+        )
       } else {
-        await this.prisma.upvote.delete({
-          where: { userId_streamId: { userId: userID, streamId } },
-        });
+        await this.prisma.stream.update({
+          where:{id:streamId},
+          data:{
+            upvotes:{
+              decrement:1
+            }
+          }
+        })
       }
-
+      
       await this.redisClient.set(
         `lastVoted-${spaceId}-${userID}`,
         String(Date.now()),
       );
+      
       await this.publisher.publish(
         spaceId,
         JSON.stringify({
           type: "new-vote",
-          data: { streamId, vote, votedBy: userID },
+          data: { streamId, vote, votedBy: user?.name },
         }),
       );
     } catch (err) {
-      console.error("adminCastVote error", err);
+      console.error("CastVote error", err);
     }
   }
 
@@ -426,25 +432,25 @@ export default class SpaceManager {
       return new Error("not present in the stream");
     }
     if (!isCreator) {
-      const lastVoted = await this.redisClient.get(
-        `lastVoted-${spaceID}-${userID}`,
-      );
-      if (lastVoted) {
-        currentuser.ws.send(
-            JSON.stringify({
-              type: "error",
-              data: { message: "You can vote after 20 mins" },
-            }),
-          )
-        return;
+      const lastVoted = await this.redisClient.get(`lastVoted-${spaceID}-${userID}`);
+      
+      {
+        this.queue.add('cast-vote',{
+          creatorID,
+          userID,
+          streamId:streamID,
+          vote,
+          spaceId:spaceID
+        })
       }
+      return ;
     }
     await this.queue.add("cast-vote", {
       creatorID,
       userID,
-      streamID,
+      streamId:streamID,
       vote,
-      spaceID,
+      spaceId:spaceID
     });
   }
 
@@ -489,7 +495,6 @@ export default class SpaceManager {
       `queue-length-${spaceID}`,
       String(currentStreamlength + 1),
     );
-    GetVideoDetails(extractedId)
     const res = await GetVideoDetails(extractedId);
     console.log({res});
     if (!res || !res.thumbnail) {
@@ -606,7 +611,7 @@ export default class SpaceManager {
         return;
       }
     }
-    console.log(currentUserId,spaceId,isCreator);
+    console.log({currentUserId,spaceId,isCreator});
     await this.queue.add("add-stream", {
       spaceId,
       userId: currentUser.userId,

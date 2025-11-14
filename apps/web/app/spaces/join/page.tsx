@@ -13,7 +13,7 @@ import {
   Users,
   Volume2,
 } from "lucide-react";
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, useRef } from "react";
 import NavBar from "@/Components/NavBar";
 import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
 import useWindow from "@/hooks/window-hook";
@@ -58,11 +58,14 @@ export default function StreamPageStatic() {
     link: "",
   });
   const [loading, setLoading] = useState(false);
-
+  const hasjoined=useRef(false);
   const currentSong = streams[0];
 
 
   useEffect(() => {
+
+    if(hasjoined.current) return ;
+    hasjoined.current=true;
     if (!token) return;
 
     const joinRoom = async () => {
@@ -72,7 +75,7 @@ export default function StreamPageStatic() {
           `http://localhost:3000/api/spaces/join?t=${token}`
         );
         const data = res.data.space;
-
+        console.log(data);
         setStreams(data.streams || []);
         setCurrentStream(data.currentStream || null);
         setParticipants(data.participants || []);
@@ -80,8 +83,7 @@ export default function StreamPageStatic() {
           name: data.name,
           id: data.id,
           description: data.description,
-          link: data.link,
-        });
+          link: data.link,});
 
         context?.sendMessage(
           JSON.stringify({
@@ -97,7 +99,7 @@ export default function StreamPageStatic() {
     };
 
     joinRoom();
-  }, [token, context, user?.id]);
+  }, []);
 
 
   useEffect(() => {
@@ -114,8 +116,9 @@ export default function StreamPageStatic() {
             setStreams((prev) => [...prev, data]);
             break;
 
-          case `user-joined/${space.id}`:
-            setParticipants((prev) => [...prev, data.user]);
+          case `joined-space`:
+            const ispresent=participants.findIndex(p=>p.id===data.userID)
+            ispresent===-1?setParticipants((prev) => [...prev, data]):null;
             break;
 
           case `user-left/${space.id}`:
@@ -123,6 +126,12 @@ export default function StreamPageStatic() {
               prev.filter((p) => p.id !== data.userId)
             );
             break;
+          case `new-vote/${space.id}`:
+            const stream=streams.find(s=>s.id===data.streamId);
+            if(stream) setStreams(prev=>prev.map(song=>{
+              if(song.id===stream.id) return {...song, upvotes: song.upvotes + (data.vote==="up" ? 1 : -1)};
+              return song;
+            }))
           case 'error':
                 console.error;
                 break;
@@ -153,6 +162,11 @@ export default function StreamPageStatic() {
     setLoading(false);
   }, [url, space.id, user?.id,context]);
 
+  const voteForSong=useCallback((songid:string,vote:string)=>{
+    console.log('vote send');
+    
+    context?.sendMessage(JSON.stringify({type:'cast-vote',data:{userId:session?.user.id,streamId:songid,vote,spaceId:space.id}}))
+  },[url,space.id,user?.id,context])
   
   if (loading) {
     return (
@@ -236,7 +250,7 @@ export default function StreamPageStatic() {
                     <YouTube
                       videoId={currentSong.id ?? ""}
                       opts={{
-                        width: "100%",
+                        width: "10%",
                         playerVars: { autoplay: 0 },
                       }}
                     />
@@ -262,7 +276,7 @@ export default function StreamPageStatic() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-400">
+                  <div className="text-center py-8 text-green-400">
                     <Music className="w-12 h-12 mx-auto mb-4" />
                     No song currently playing
                   </div>
@@ -299,7 +313,7 @@ export default function StreamPageStatic() {
                   <div className="space-y-3">
                     {streams.map((song, i) => (
                       <div
-                        key={song.id}
+                        key={song.extractedId}
                         className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700/50"
                       >
                         <div className="text-gray-500 w-6 text-center">
@@ -312,9 +326,9 @@ export default function StreamPageStatic() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <ChevronUp />
+                          <ChevronUp onClick={()=>voteForSong(song.id,"up")} />
                           <span>{song.upvotes}</span>
-                          <ChevronDown />
+                          <ChevronDown  onClick={()=>voteForSong(song.id,"down")}/>
                         </div>
                       </div>
                     ))}
@@ -361,7 +375,19 @@ export default function StreamPageStatic() {
             </div>
           </div>
         </div>
+        {
+          
+        }
+        <JoinNoification user={participants[participants.length-1]?.name!}/>
       </main>
     </div>
   );
+}
+
+function JoinNoification(props:{user:string}){
+  return <>
+    <div className="bg-transparent text-green-500 bottom-0 left-[50%]">
+      joined {props.user}
+    </div>
+  </>
 }

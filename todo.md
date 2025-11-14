@@ -2,7 +2,7 @@
 
 - [x] get the streams and display in the
 - [x] generate and store joinable link
-- [] host joined the stream and add a track by url
+- [x] host joined the stream and add a track by url
 
 # checklist Todos:
 
@@ -12,6 +12,8 @@
 
 # checklist Todos:
 
-- [] the queue will be arranged in descending order
-- []
-- []
+- [] the queue will be arranged in descending order of votes
+- [] vote for a song 
+- [] retreive the username 
+- [] check for generation of queues
+- [] 

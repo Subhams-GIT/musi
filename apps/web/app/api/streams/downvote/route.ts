@@ -42,7 +42,7 @@ export async function POST(req:NextRequest){
 					streamId:data.streamId	
 				}
 			}
-		})	
+		})
 		await prisma.stream.update({
 			where: {
 				id: data.streamId

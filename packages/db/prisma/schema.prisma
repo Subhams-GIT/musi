@@ -71,7 +71,7 @@ model Upvote {
   streamId String
   user     User   @relation(fields: [userId], references: [id])
 
-  @@unique([userId, streamId])
+  @@unique([userId])
 }
 
 enum StreamType {
