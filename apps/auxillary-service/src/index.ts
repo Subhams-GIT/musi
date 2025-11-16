@@ -49,6 +49,7 @@ async function handleConnection(ws: WebSocket) {
         await handleJoinRoom(ws, data);
         break;
       default:
+        console.log({type,data});
         await handleUserAction(ws, type, data);
     }
   });
@@ -67,7 +68,7 @@ async function handleJoinRoom(ws: WebSocket, data: Data) {
         console.error(err);
         ws.send(JSON.stringify({ error: "not authenticated" }));
       } else {
-        console.log("data", data);
+        // console.log("data", data);
         SpaceManager.getInstance().joinRoom(
           decoded.spaceId,
           decoded.creatorId,
@@ -81,6 +82,7 @@ async function handleJoinRoom(ws: WebSocket, data: Data) {
 }
 
 async function processUserAction(type: string, data: Data, ws: WebSocket) {
+  console.log({type});
   switch (type) {
     case "cast-vote":
       await SpaceManager.getInstance().castVote(
@@ -89,6 +91,13 @@ async function processUserAction(type: string, data: Data, ws: WebSocket) {
         data.vote,
         data.spaceId,
       );
+      break;
+    case 'play-song':
+      await SpaceManager.getInstance().controlSong(data.spaceId,true,data.streamId,data.userId);
+      break;
+
+    case 'pause-song':
+      await SpaceManager.getInstance().controlSong(data.spaceId,false,data.streamId,data.userId);
       break;
 
     case "add-to-queue":
@@ -127,8 +136,9 @@ async function processUserAction(type: string, data: Data, ws: WebSocket) {
 }
 
 async function handleUserAction(ws: WebSocket, type: string, data: Data) {
+  console.log(SpaceManager.getInstance().users.size);
   const user = SpaceManager.getInstance().users.get(data.userId);
-
+  // console.log({user});
   if (user) {
     data.userId = user.userId;
     await processUserAction(type, data, ws);

@@ -21,8 +21,8 @@ import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { WebSocketContext } from "@/Context/wsContext";
 import { useSession } from "next-auth/react";
-import YouTube from "react-youtube";
 import { Streams } from "@/utils/types";
+import ReactPlayer from 'react-player'
 
 type CurrentStream = {
   id: string;
@@ -41,11 +41,10 @@ export default function StreamPageStatic() {
   const { data: session } = useSession();
   const user = session?.user;
   const context= useContext(WebSocketContext);
-
+  const [isplaying,setisplaying]=useState(false);
   const params = useSearchParams();
   const token = params.get("t");
   const windowSize = useWindow();
-
   const [open, setOpen] = useState(false);
   const [streams, setStreams] = useState<Streams[]>([]);
   const [currentStream, setCurrentStream] = useState<CurrentStream | null>(null);
@@ -99,12 +98,20 @@ export default function StreamPageStatic() {
     };
 
     joinRoom();
+
   }, []);
+
+  useEffect(()=>{
+    console.log('sorting')
+    setStreams(prev=>prev.map(song=>song).sort((a,b)=>a.upvotes===b.upvotes?0:a.upvotes<b.upvotes?1:-1))
+  },[context?.ws,space.id])
 
 
   useEffect(() => {
     if (!context?.ws.current) return;
-
+    const sortSongs=()=>{
+      setStreams(prev=>prev.map(song=>song).sort((a,b)=>a.upvotes===b.upvotes?0:a.upvotes<b.upvotes?1:-1))
+    }
     const socket = context.ws.current;
     socket.onmessage = (msg) => {
       try {
@@ -132,6 +139,14 @@ export default function StreamPageStatic() {
               if(song.id===stream.id) return {...song, upvotes: song.upvotes + (data.vote==="up" ? 1 : -1)};
               return song;
             }))
+            sortSongs();
+            break;
+          case 'play-song':
+            setisplaying(true);
+            break;
+          case 'pause-song':
+            setisplaying(false);
+            break;
           case 'error':
                 console.error;
                 break;
@@ -147,7 +162,8 @@ export default function StreamPageStatic() {
       socket.onmessage = null;
     };
   }, [context?.ws, space.id]);
-
+  console.log(isplaying);
+  
   const addToQueue = useCallback(() => {
     if (!url.trim() || !space.id || !user?.id) return;
     console.log(context);
@@ -167,7 +183,13 @@ export default function StreamPageStatic() {
     
     context?.sendMessage(JSON.stringify({type:'cast-vote',data:{userId:session?.user.id,streamId:songid,vote,spaceId:space.id}}))
   },[url,space.id,user?.id,context])
-  
+
+  const controlSong=useCallback((state:string)=>{
+    console.log('play send ');
+    context?.sendMessage(JSON.stringify({type:state,data:{spaceId:space.id,streamId:currentSong?.id,userId:user.id}}))
+  },[context,user?.id,space.id])
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-white italic animate-pulse">
@@ -247,17 +269,17 @@ export default function StreamPageStatic() {
                       </div>
                     </div>
 
-                    <YouTube
-                      videoId={currentSong.id ?? ""}
-                      opts={{
-                        width: "10%",
-                        playerVars: { autoplay: 0 },
-                      }}
-                    />
+                    <ReactPlayer  src={`https://www.youtube.com/watch?v=${currentSong.extractedId}`} playing={isplaying} className="inset-1 -z-10"/>
 
                     <div className="flex items-center justify-center gap-4 pt-4">
                       <button className="h-12 w-12 flex items-center justify-center border rounded-full text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        {currentSong.played ? <Pause /> : <Play />}
+                        {isplaying ? <Pause onClick={()=>{
+                        controlSong('pause-song')
+                          setisplaying(false);
+                        }} /> : <Play  onClick={()=>{
+                          controlSong('play-song')
+                          setisplaying(true);
+                          }}  />}
                       </button>
                       {currentStream?.userId === user?.id && (
                         <button className="h-12 w-12 flex items-center justify-center border rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">

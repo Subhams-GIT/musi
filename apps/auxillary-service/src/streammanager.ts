@@ -5,7 +5,7 @@ import { Job, Queue, Worker } from "bullmq";
 import { checkforurl } from "./util.js";
 import prisma from "@repo/db";
 import { user } from "./types.js";
-import { count } from "console";
+
 
 const MAX_QUEUE_LENGTH = 20;
 const connection = {
@@ -93,6 +93,8 @@ export default class SpaceManager {
       case "play-next":
         await this.PlayNext(data.spaceId, data.userId);
         break;
+      case 'play-song':
+
       default:
         break;
     }
@@ -135,17 +137,47 @@ export default class SpaceManager {
     });
   }
 
+  async controlSong(spaceId:string,isplaying:boolean,streamId:string,userId:string){
+    const user=this.users.get(userId);
+    if(!user || user.userId!==this.spaces.get(spaceId)?.creatorId){
+      return new Error('Error');
+    }
+
+    const space=this.spaces.get(spaceId);
+    if(!space){
+      return new Error('space not found');
+    }
+    try {
+      console.log({spaceId,isplaying,streamId})
+      const message=isplaying?JSON.stringify({type:"play-song",spaceId}):JSON.stringify({type:"pause-song",spaceId})
+      space.users.forEach(user=>{
+        user.ws.send(message);
+      })
+
+      await this.prisma.stream.update({
+         where:{id:streamId},
+         data:{
+           active: isplaying,
+          played:isplaying 
+         }
+      })
+  // console.log({spaceId,isplaying,streamId}) 
+    } catch (error) {
+      console.error("control song error",error);
+    }
+  }
+
   async joinRoom(
     spaceID: string,
     creatorID: string,
     userID: string,
     ws: WebSocket,
     token: string) {
-    console.log("joinee id ", userID);
+    // console.log("joinee id ", userID);
     let space = this.spaces.get(spaceID);
     let user = this.users.get(userID);
     if (!space) {
-      this.createRoom(spaceID);
+      await this.createRoom(spaceID);
       space = this.spaces.get(spaceID);
     }
     if (!user) {
@@ -171,6 +203,7 @@ export default class SpaceManager {
         creatorId: creatorID,
       });
     }
+
     const joineduser: user | null = await this.prisma.user.findFirst({
       where: {
         id: userID,
@@ -183,7 +216,7 @@ export default class SpaceManager {
     space?.users.forEach((user)=>{
       user.ws.send(JSON.stringify({type:'joined-space',data:{name,userID}}))
     })
-    console.log({users:this.users,spaces:this.spaces});
+    // console.log({users:this.users,spaces:this.spaces});
   }
 
   publishEmptyQueue(spaceID: string) {

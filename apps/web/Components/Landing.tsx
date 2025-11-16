@@ -87,7 +87,7 @@ export default function landing(): React.JSX.Element {
 
         <section className="grid grid-cols-1 grid-row-4 md:grid-cols-2 md:grid-rows-2 gap-10 ">
             {testimonials.map((testimonial) => (
-                <div key={testimonial.company} className="flex flex-col items-center text-center p-5 border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div key={testimonial.company} className="flex items-center text-center p-5 border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
                 <div className="text-4xl mb-2">{testimonial.logo}</div>
                 <div className="text-2xl font-bold">{testimonial.metric}</div>
                 <div className="text-gray-600">{testimonial.description}</div>
@@ -108,7 +108,7 @@ export default function landing(): React.JSX.Element {
             <section>
                 {features.map
                 ((feature) => (
-                    <div key={feature.title} className="flex items-start gap-5 my-5">
+                    <div key={feature.title} className="flex items-start  gap-5 my-5">
                         <div className="text-3xl text-black mt-1">{feature.icon}</div>
                         <div>
                             <div className="font-bold text-xl">{feature.title}</div>
