@@ -13,6 +13,11 @@ export type Streams = {
     id: string;
     name: string | null;
   };
+  addedByUser: {
+    id: string;
+    name: string | null;
+  };
+  duration: number;
   addedBy:string,
   played:boolean
 };

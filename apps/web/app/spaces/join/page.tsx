@@ -22,14 +22,7 @@ import axios from "axios";
 import { WebSocketContext } from "@/Context/wsContext";
 import { useSession } from "next-auth/react";
 import { Streams } from "@/utils/types";
-import ReactPlayer from 'react-player'
-
-type CurrentStream = {
-  id: string;
-  userId: string;
-  spaceId: string | null;
-  streamId: string | null;
-};
+import ReactPlayer from "react-player";
 
 type Participant = {
   id: string;
@@ -40,14 +33,14 @@ type Participant = {
 export default function StreamPageStatic() {
   const { data: session } = useSession();
   const user = session?.user;
-  const context= useContext(WebSocketContext);
-  const [isplaying,setisplaying]=useState(false);
+  const context = useContext(WebSocketContext);
+  const [isplaying, setisplaying] = useState(false);
   const params = useSearchParams();
   const token = params.get("t");
   const windowSize = useWindow();
   const [open, setOpen] = useState(false);
   const [streams, setStreams] = useState<Streams[]>([]);
-  const [currentStream, setCurrentStream] = useState<CurrentStream | null>(null);
+  const [currentStream, setCurrentStream] = useState<Streams | null>(null);
   const [url, setUrl] = useState("");
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [space, setSpace] = useState({
@@ -57,14 +50,12 @@ export default function StreamPageStatic() {
     link: "",
   });
   const [loading, setLoading] = useState(false);
-  const hasjoined=useRef(false);
+  const hasjoined = useRef(false);
   const currentSong = streams[0];
 
-
   useEffect(() => {
-
-    if(hasjoined.current) return ;
-    hasjoined.current=true;
+    if (hasjoined.current) return;
+    hasjoined.current = true;
     if (!token) return;
 
     const joinRoom = async () => {
@@ -82,7 +73,8 @@ export default function StreamPageStatic() {
           name: data.name,
           id: data.id,
           description: data.description,
-          link: data.link,});
+          link: data.link,
+        });
 
         context?.sendMessage(
           JSON.stringify({
@@ -98,20 +90,30 @@ export default function StreamPageStatic() {
     };
 
     joinRoom();
-
   }, []);
 
-  useEffect(()=>{
-    console.log('sorting')
-    setStreams(prev=>prev.map(song=>song).sort((a,b)=>a.upvotes===b.upvotes?0:a.upvotes<b.upvotes?1:-1))
-  },[context?.ws,space.id])
-
+  useEffect(() => {
+    console.log("sorting");
+    setStreams((prev) =>
+      prev
+        .map((song) => song)
+        .sort((a, b) =>
+          a.upvotes === b.upvotes ? 0 : a.upvotes < b.upvotes ? 1 : -1
+        )
+    );
+  }, [context?.ws, space.id]);
 
   useEffect(() => {
     if (!context?.ws.current) return;
-    const sortSongs=()=>{
-      setStreams(prev=>prev.map(song=>song).sort((a,b)=>a.upvotes===b.upvotes?0:a.upvotes<b.upvotes?1:-1))
-    }
+    const sortSongs = () => {
+      setStreams((prev) =>
+        prev
+          .map((song) => song)
+          .sort((a, b) =>
+            a.upvotes === b.upvotes ? 0 : a.upvotes < b.upvotes ? 1 : -1
+          )
+      );
+    };
     const socket = context.ws.current;
     socket.onmessage = (msg) => {
       try {
@@ -124,32 +126,41 @@ export default function StreamPageStatic() {
             break;
 
           case `joined-space`:
-            const ispresent=participants.findIndex(p=>p.id===data.userID)
-            ispresent===-1?setParticipants((prev) => [...prev, data]):null;
+            const ispresent = participants.findIndex(
+              (p) => p.id === data.userID
+            );
+            ispresent === -1
+              ? setParticipants((prev) => [...prev, data])
+              : null;
             break;
 
           case `user-left/${space.id}`:
-            setParticipants((prev) =>
-              prev.filter((p) => p.id !== data.userId)
-            );
+            setParticipants((prev) => prev.filter((p) => p.id !== data.userId));
             break;
           case `new-vote/${space.id}`:
-            const stream=streams.find(s=>s.id===data.streamId);
-            if(stream) setStreams(prev=>prev.map(song=>{
-              if(song.id===stream.id) return {...song, upvotes: song.upvotes + (data.vote==="up" ? 1 : -1)};
-              return song;
-            }))
+            const stream = streams.find((s) => s.id === data.streamId);
+            if (stream)
+              setStreams((prev) =>
+                prev.map((song) => {
+                  if (song.id === stream.id)
+                    return {
+                      ...song,
+                      upvotes: song.upvotes + (data.vote === "up" ? 1 : -1),
+                    };
+                  return song;
+                })
+              );
             sortSongs();
             break;
-          case 'play-song':
+          case "play-song":
             setisplaying(true);
             break;
-          case 'pause-song':
+          case "pause-song":
             setisplaying(false);
             break;
-          case 'error':
-                console.error;
-                break;
+          case "error":
+            console.error;
+            break;
           default:
             console.warn("Unknown WebSocket message:", type);
         }
@@ -163,7 +174,7 @@ export default function StreamPageStatic() {
     };
   }, [context?.ws, space.id]);
   console.log(isplaying);
-  
+
   const addToQueue = useCallback(() => {
     if (!url.trim() || !space.id || !user?.id) return;
     console.log(context);
@@ -176,19 +187,43 @@ export default function StreamPageStatic() {
     );
     setUrl("");
     setLoading(false);
-  }, [url, space.id, user?.id,context]);
+  }, [url, space.id, user?.id, context]);
 
-  const voteForSong=useCallback((songid:string,vote:string)=>{
-    console.log('vote send');
-    
-    context?.sendMessage(JSON.stringify({type:'cast-vote',data:{userId:session?.user.id,streamId:songid,vote,spaceId:space.id}}))
-  },[url,space.id,user?.id,context])
+  const voteForSong = useCallback(
+    (songid: string, vote: string) => {
+      console.log("vote send");
 
-  const controlSong=useCallback((state:string)=>{
-    console.log('play send ');
-    context?.sendMessage(JSON.stringify({type:state,data:{spaceId:space.id,streamId:currentSong?.id,userId:user.id}}))
-  },[context,user?.id,space.id])
+      context?.sendMessage(
+        JSON.stringify({
+          type: "cast-vote",
+          data: {
+            userId: session?.user.id,
+            streamId: songid,
+            vote,
+            spaceId: space.id,
+          },
+        })
+      );
+    },
+    [url, space.id, user?.id, context]
+  );
 
+  const controlSong = useCallback(
+    (state: string) => {
+      console.log("play send ");
+      context?.sendMessage(
+        JSON.stringify({
+          type: state,
+          data: {
+            spaceId: space.id,
+            streamId: currentSong?.id,
+            userId: user.id,
+          },
+        })
+      );
+    },
+    [context, user?.id, space.id]
+  );
 
   if (loading) {
     return (
@@ -212,14 +247,13 @@ export default function StreamPageStatic() {
         </div>
       )}
 
-      {/* Main content */}
       <main
         className={`flex-1 overflow-auto ${
           windowSize < 768 ? "pt-15" : "pl-20"
         } min-h-screen bg-black text-black h-full`}
       >
         <div className="p-6">
-          {/* Header */}
+   
           <div className="flex items-center justify-between mb-6 text-white">
             <h1 className="text-2xl font-bold">{space.name}</h1>
             <div className="flex items-center gap-2">
@@ -244,9 +278,9 @@ export default function StreamPageStatic() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* Main section */}
+           
             <div className="xl:col-span-3 space-y-6">
-              {/* Now Playing */}
+          
               <div className="p-6 bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-4">
                   <Music />
@@ -264,22 +298,43 @@ export default function StreamPageStatic() {
                           {currentSong.title}
                         </h3>
                         <p className="text-gray-400 text-sm">
-                          Added by {currentSong.addedBy}
+                          Added by {currentSong.addedByUser.name}
                         </p>
                       </div>
                     </div>
 
-                    <ReactPlayer  src={`https://www.youtube.com/watch?v=${currentSong.extractedId}`} playing={isplaying} className="inset-1 -z-10"/>
+                    {currentStream && (
+                      <ReactPlayer
+                        src={`https://www.youtube.com/watch?v=${currentStream.extractedId}`}
+                        playing={isplaying}
+                        className="inset-1 -z-10"
+                        onEnded={() =>
+                          setStreams(
+                            streams.filter(
+                              (song) => song.id !== currentStream.id
+                            )
+                          )
+                        }
+                      />
+                    )}
 
                     <div className="flex items-center justify-center gap-4 pt-4">
                       <button className="h-12 w-12 flex items-center justify-center border rounded-full text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        {isplaying ? <Pause onClick={()=>{
-                        controlSong('pause-song')
-                          setisplaying(false);
-                        }} /> : <Play  onClick={()=>{
-                          controlSong('play-song')
-                          setisplaying(true);
-                          }}  />}
+                        {isplaying ? (
+                          <Pause
+                            onClick={() => {
+                              controlSong("pause-song");
+                              setisplaying(false);
+                            }}
+                          />
+                        ) : (
+                          <Play
+                            onClick={() => {
+                              controlSong("play-song");
+                              setisplaying(true);
+                            }}
+                          />
+                        )}
                       </button>
                       {currentStream?.userId === user?.id && (
                         <button className="h-12 w-12 flex items-center justify-center border rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -305,7 +360,7 @@ export default function StreamPageStatic() {
                 )}
               </div>
 
-              {/* Queue */}
+              
               <div className="p-6 bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -344,13 +399,17 @@ export default function StreamPageStatic() {
                         <div className="flex-1 min-w-0">
                           <h4 className="truncate">{song.title}</h4>
                           <p className="text-sm text-gray-400 truncate">
-                            Added by {song.addedBy}
+                            Added by {song.addedByUser.name}
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <ChevronUp onClick={()=>voteForSong(song.id,"up")} />
+                          <ChevronUp
+                            onClick={() => voteForSong(song.id, "up")}
+                          />
                           <span>{song.upvotes}</span>
-                          <ChevronDown  onClick={()=>voteForSong(song.id,"down")}/>
+                          <ChevronDown
+                            onClick={() => voteForSong(song.id, "down")}
+                          />
                         </div>
                       </div>
                     ))}
@@ -363,7 +422,7 @@ export default function StreamPageStatic() {
               </div>
             </div>
 
-            {/* Participants */}
+       
             <div className="xl:col-span-1">
               <div className="p-6 bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700 sticky top-6">
                 <div className="flex items-center gap-2 mb-4">
@@ -397,19 +456,19 @@ export default function StreamPageStatic() {
             </div>
           </div>
         </div>
-        {
-          
-        }
-        <JoinNoification user={participants[participants.length-1]?.name!}/>
+        {}
+        {/* <JoinNoification user={participants[participants.length - 1]?.name!} /> */}
       </main>
     </div>
   );
 }
 
-function JoinNoification(props:{user:string}){
-  return <>
-    <div className="bg-transparent text-green-500 bottom-0 left-[50%]">
-      joined {props.user}
-    </div>
-  </>
+function JoinNoification(props: { user: string }) {
+  return (
+    <>
+      <div className="bg-transparent text-green-500 bottom-0 left-[50%]">
+        joined {props.user}
+      </div>
+    </>
+  );
 }

@@ -12,8 +12,12 @@
 
 # checklist Todos:
 
-- [] the queue will be arranged in descending order of votes
-- [] vote for a song 
-- [] retreive the username 
-- [] check for generation of queues
-- [] 
+- [x] the queue will be arranged in descending order of votes
+- [x] vote for a song 
+- [x] retreive the username 
+- [] check for generation of queues 
+- [] make a space invalid after the admin disconnects 
+- [] only those participants which are in the stream should be seen not the ones in db 
+- [] better ui 
+- [] handle sidebar 
+- [] playnext highest voted one 

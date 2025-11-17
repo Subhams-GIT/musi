@@ -30,9 +30,33 @@ export async function POST(req: NextRequest) {
         id: decoded.spaceId,
       },
       include: {
-        participants: true,
+        participants: {
+          select:{
+            id:true,
+            name:true,
+          }
+        },
         currentStream: true,
-        streams: true,
+        streams: {
+          select:{
+            id: true,
+            type: true,
+            active: true,
+            upvotes: true,
+            userId: true,
+            extractedId: true,
+            url: true,
+            addedByUser:{
+              select:{
+                name:true,
+                id:true,
+              }
+            },
+            title:true,
+            largeThumbnail: true,
+            played:true,
+          }
+        },
       },
     });
     if (!space) {
