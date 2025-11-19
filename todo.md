@@ -21,3 +21,5 @@
 - [] better ui 
 - [] handle sidebar 
 - [] playnext highest voted one 
+
+## once a user joins the server should send the list of all the present participants connected to the server 

@@ -161,7 +161,7 @@ export default class SpaceManager {
           played:isplaying 
          }
       })
-  // console.log({spaceId,isplaying,streamId}) 
+
     } catch (error) {
       console.error("control song error",error);
     }
@@ -173,7 +173,7 @@ export default class SpaceManager {
     userID: string,
     ws: WebSocket,
     token: string) {
-    // console.log("joinee id ", userID);
+    
     let space = this.spaces.get(spaceID);
     let user = this.users.get(userID);
     if (!space) {
@@ -209,14 +209,21 @@ export default class SpaceManager {
         id: userID,
       },
     });
+
     if (!joineduser) {
-      return new Error("couldnot find user");
+      return new Error("could not find user");
     }
+
     const name = joineduser.name;
+    const usernames={
+      userIDs:Array.from(this.spaces.get(spaceID)?.users.keys() || []),
+      name:name
+    }
+
     space?.users.forEach((user)=>{
-      user.ws.send(JSON.stringify({type:'joined-space',data:{name,userID}}))
+      user.ws.send(JSON.stringify({type:'joined-space',data:{usernames,spaceID}}))
     })
-    // console.log({users:this.users,spaces:this.spaces});
+    
   }
 
   publishEmptyQueue(spaceID: string) {
@@ -242,7 +249,7 @@ export default class SpaceManager {
 
     if (!room || !userId) return;
 
-    //TODO: mark all as played
+
     await this.prisma.stream.updateMany({
       where: {
         spaceId: spaceId,
@@ -543,6 +550,7 @@ export default class SpaceManager {
     const thumbnails = res.thumbnail.thumbnails || [];
     thumbnails.sort((a: any, b: any) => (a.width < b.width ? -1 : 1));
     console.log('stream pre-creation')
+    
     const stream = await this.prisma.stream.create({
       data: {
         id: crypto.randomUUID(),
@@ -659,8 +667,10 @@ export default class SpaceManager {
     const spaceId = this.wstoSpace.get(ws);
 
     this.users.forEach((user, id) => {
-      if(user.ws!=null){
-        this.users.delete(id)
+      if(user.ws==ws){
+        this.users.delete(user.userId);
+        userId = id;
+        
       }
     });
 
@@ -671,9 +681,9 @@ export default class SpaceManager {
           Array.from(space.users).filter(([usrId]) => userId !== usrId),
         );
         this.spaces.set(spaceId, { ...space, users: updatedUsers });
-      }
+      } // delete from space 
     }
 
-    this.wstoSpace.delete(ws);
+    this.wstoSpace.delete(ws); // delete the user ws 
   }
 }

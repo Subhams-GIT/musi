@@ -24,6 +24,8 @@ import { useSession } from "next-auth/react";
 import { Streams } from "@/utils/types";
 import ReactPlayer from "react-player";
 
+
+
 type Participant = {
   id: string;
   name: string;
@@ -65,7 +67,13 @@ export default function StreamPageStatic() {
           `http://localhost:3000/api/spaces/join?t=${token}`
         );
         const data = res.data.space;
-        console.log(data);
+        context?.sendMessage(
+          JSON.stringify({
+            type: "join-room",
+            data: { token, userId: user?.id },
+          })
+        );
+        // console.log(data);
         setStreams(data.streams || []);
         setCurrentStream(data.currentStream || null);
         setParticipants(data.participants || []);
@@ -76,12 +84,6 @@ export default function StreamPageStatic() {
           link: data.link,
         });
 
-        context?.sendMessage(
-          JSON.stringify({
-            type: "join-room",
-            data: { token, userId: user?.id },
-          })
-        );
       } catch (error) {
         console.error("Error joining space:", error);
       } finally {
@@ -92,16 +94,6 @@ export default function StreamPageStatic() {
     joinRoom();
   }, []);
 
-  useEffect(() => {
-    console.log("sorting");
-    setStreams((prev) =>
-      prev
-        .map((song) => song)
-        .sort((a, b) =>
-          a.upvotes === b.upvotes ? 0 : a.upvotes < b.upvotes ? 1 : -1
-        )
-    );
-  }, [context?.ws, space.id]);
 
   useEffect(() => {
     if (!context?.ws.current) return;
@@ -114,6 +106,7 @@ export default function StreamPageStatic() {
           )
       );
     };
+
     const socket = context.ws.current;
     socket.onmessage = (msg) => {
       try {
@@ -126,16 +119,23 @@ export default function StreamPageStatic() {
             break;
 
           case `joined-space`:
-            const ispresent = participants.findIndex(
-              (p) => p.id === data.userID
-            );
-            ispresent === -1
-              ? setParticipants((prev) => [...prev, data])
-              : null;
+            const totalParticipants:string[]=data.usernames.userIDs;
+            console.log({totalParticipants});
+            const updatedParticipants:Participant[]=[];
+            console.log({participants});
+            totalParticipants.forEach((userid:string) => {
+              const isConnected=participants.findIndex(p=>p.id===userid)
+              console.log(isConnected);
+              if(participants[isConnected]!=undefined && isConnected>-1){
+                updatedParticipants.push(participants[isConnected]);
+              }
+              });
+            console.log(updatedParticipants);
+            setParticipants(updatedParticipants);
             break;
 
           case `user-left/${space.id}`:
-            setParticipants((prev) => prev.filter((p) => p.id !== data.userId));
+            setParticipants((prev) => prev.filter((p) => p.id !== data.userID));
             break;
           case `new-vote/${space.id}`:
             const stream = streams.find((s) => s.id === data.streamId);
@@ -159,7 +159,7 @@ export default function StreamPageStatic() {
             setisplaying(false);
             break;
           case "error":
-            console.error;
+            console.error(data.msg);
             break;
           default:
             console.warn("Unknown WebSocket message:", type);
@@ -168,7 +168,7 @@ export default function StreamPageStatic() {
         console.error("WebSocket message error:", err);
       }
     };
-
+    sortSongs();
     return () => {
       socket.onmessage = null;
     };
@@ -177,6 +177,8 @@ export default function StreamPageStatic() {
 
   const addToQueue = useCallback(() => {
     if (!url.trim() || !space.id || !user?.id) return;
+    const extractedId=url.split("?v=")[1];
+    if(streams.findIndex(s=>s.extractedId===extractedId)===-1) return new Error('song already present in the queue');
     console.log(context);
     setLoading(true);
     context?.sendMessage(
@@ -280,7 +282,7 @@ export default function StreamPageStatic() {
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
            
             <div className="xl:col-span-3 space-y-6">
-          
+              
               <div className="p-6 bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-4">
                   <Music />
@@ -433,7 +435,7 @@ export default function StreamPageStatic() {
                 </div>
 
                 <div className="space-y-3">
-                  {participants.map((p) => (
+                  {participants.length>0?( participants.map((p) => (
                     <div key={p.id} className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-semibold uppercase">
                         {p.name
@@ -450,14 +452,17 @@ export default function StreamPageStatic() {
                         )}
                       </div>
                     </div>
-                  ))}
+                  ))):( 
+                    <div className="text-center py-6 text-gray-400">
+                    No participants yet.
+                  </div>
+                  )
+                  }
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {}
-        {/* <JoinNoification user={participants[participants.length - 1]?.name!} /> */}
       </main>
     </div>
   );
