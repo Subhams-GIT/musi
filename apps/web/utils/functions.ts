@@ -1,4 +1,4 @@
-import { createShareLink } from "@repo/redis/src";
+// import { createShareLink } from "@repo/redis/src";
 
 export const parseTrackFromUrl = (url: string): boolean | null => {
   if (url.includes("youtube.com") || url.includes("spotify.com")) {
@@ -10,7 +10,7 @@ export const parseTrackFromUrl = (url: string): boolean | null => {
 export const handleVote = async (trackId: string, voteType: "up" | "down") => {
     try {
       const res = await fetch(
-        `http://localhost:3000/api/streams/${voteType === "up" ? "upvote" : "downvote"}`,
+        `${window.location.protocol}//${window.location.hostname}:3000/api/streams/${voteType === "up" ? "upvote" : "downvote"}`,
         {
           method: "POST",
           headers: {
@@ -29,8 +29,7 @@ export const handleVote = async (trackId: string, voteType: "up" | "down") => {
 export const handlelistenerVote=async (hashedid:string,streamId:string,voteType:"up"|"down")=>{
   try {
 
-    
-    await fetch('http://localhost:3000/api/streams/vote',{
+    await fetch(`${window.location.protocol}//${window.location.hostname}:3000/api/streams/vote`,{
       method:'POST',
       headers: {
             "Content-Type": "application/json",

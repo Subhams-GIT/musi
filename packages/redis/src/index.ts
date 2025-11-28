@@ -23,7 +23,7 @@ export async function createShareLink(
   // const token=crypto.randomUUID();
   await redis.set(hash, spaceId, { EX: 60 * 60 * 24 });
 
-  return `http://localhost:3000/spaces/join?t=${hash}`;
+  return `${window.location.protocol}//${window.location.hostname}:3000/spaces/join?t=${hash}`;
 }
 
 export const getSpace = async (token: string) => {

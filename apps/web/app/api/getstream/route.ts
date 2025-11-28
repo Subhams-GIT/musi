@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 		console.log("active", streamerid)
 		streamerid=streamerid?.replace(/^"|"$/g, "");
 		try {
-			const res = await fetch(`http://localhost:3000/api/streams/active?id=${streamerid}`, {
+			const res = await fetch(`${window.location.origin}/api/streams/active?id=${streamerid}`, {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json'

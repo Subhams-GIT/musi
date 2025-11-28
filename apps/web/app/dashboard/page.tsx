@@ -1,12 +1,11 @@
 "use client";
 import { LogOutIcon, Music, Play } from "lucide-react";
 import { useEffect, useState } from "react";
-import { UserStatus, Spaces } from "../../utils/types";
-import SideBar, { Mobile_sidebar } from "../../Components/SideBar";
-import NavBar from "../../Components/NavBar";
-import useWindow from "../../hooks/window-hook";
+import { UserStatus, Spaces } from "@/utils/types";
+import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
+import NavBar from "@/Components/NavBar";
+import useWindow from "@/hooks/window-hook";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export default function Page() {
   const session = useSession();
@@ -17,11 +16,10 @@ export default function Page() {
     "total Streams Attended": 0,
   });
   const [history, sethistory] = useState<Spaces[]>([]);
-  const router = useRouter();
 
   useEffect(() => {
     function fetchData() {
-      fetch("http://localhost:3000/api/userStatus").then((d) => {
+      fetch(`${window.location.protocol}//${window.location.hostname}:3000/api/userStatus`).then((d) => {
         d.json().then((d) => {
           console.log(d.userStatus);
           setUserStatus({

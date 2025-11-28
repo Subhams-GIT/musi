@@ -35,7 +35,7 @@ export default function Page() {
   const createSpace = async () => {
     try {
       setloading(true);
-      const res = await axios.post("http://localhost:3000/api/spaces", {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/spaces`, {
         spaceName: spacename,
         description: spacedesc,
       });

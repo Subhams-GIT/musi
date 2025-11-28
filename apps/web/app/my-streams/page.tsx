@@ -28,7 +28,7 @@ export default function Page() {
   const [searchInput, setsearchInput] = useState("");
   const windowsize = useWindow();
   useEffect(() => {
-    axios.get("http://localhost:3000/api/spaces").then((r) => {
+    axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/spaces`).then((r) => {
       console.log(r.data);
       setallStreams(r.data.returnSpaces);
     });

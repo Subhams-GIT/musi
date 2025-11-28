@@ -13,7 +13,7 @@ interface user{
   setStatus:()=>void,
 }
 async function getuserstatus():Promise<History[]|null>{
-  const res=await axios.get("http://localhost:3000/api/spaces");
+  const res=await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/spaces`);
   return res.data.returnspaces;
 }
 const useSpaces = create((set) => ({

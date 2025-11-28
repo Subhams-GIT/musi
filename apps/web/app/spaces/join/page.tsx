@@ -8,7 +8,6 @@ import {
   Music,
   Pause,
   Play,
-  Settings,
   Share,
   SkipForward,
   Users,
@@ -65,7 +64,7 @@ export default function StreamPageStatic() {
       try {
         setLoading(true);
         const res = await axios.post(
-          `http://localhost:3000/api/spaces/join?t=${token}`
+          `${window.location.origin}/api/spaces/join?t=${token}`
         );
         const data = res.data.space;
         context?.sendMessage(

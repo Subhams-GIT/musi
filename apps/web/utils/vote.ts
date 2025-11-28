@@ -1,7 +1,7 @@
 const handleVote = async (trackId: string, voteType: "up" | "down") => {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/streams/${voteType === "up" ? "upvote" : "downvote"}`,
+      `${window.location.protocol}//${window.location.hostname}:3000/api/streams/${voteType === "up" ? "upvote" : "downvote"}`,
       {
         method: "POST",
         headers: {
@@ -25,7 +25,7 @@ const handleVote = async (trackId: string, voteType: "up" | "down") => {
 export async function removefromActive(trackId:string,active:boolean){
   try {
     const res = await fetch(
-      `http://localhost:3000/api/streams/active`,
+      `${window.location.protocol}//${window.location.hostname}:3000/api/streams/active`,
       {
         method: "POST",
         headers: {

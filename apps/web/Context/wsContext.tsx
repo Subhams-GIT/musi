@@ -23,7 +23,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
       clearTimeout(reconnectTimeout.current);
     }
 
-    const socket = new WebSocket('ws://localhost:8080');
+    const socket = new WebSocket(`wss://${window.location.hostname}:8080`);
     ws.current = socket;
 
     socket.onopen = () => {
@@ -37,7 +37,6 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 
     socket.onclose = () => {
       ws.current?.close();
-      // ws.current!.onmessage=null;
       ws.current=null;
       reconnectTimeout.current = setTimeout(connect, 3000);
     };

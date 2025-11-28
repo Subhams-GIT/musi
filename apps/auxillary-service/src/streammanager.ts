@@ -6,14 +6,12 @@ import { checkforurl } from "./util.js";
 import prisma from "@repo/db";
 import { user } from "./types.js";
 
-
 const MAX_QUEUE_LENGTH = 20;
 const connection = {
-  host: "localhost",
-  port: 6379,
+  url: process.env.REDIS_URL || "",
 };
 const redisCredentials = {
-  url: "redis://localhost:6379",
+  url: process.env.REDIS_URL || "",
 };
 
 type User = {
@@ -695,7 +693,7 @@ export default class SpaceManager {
 
     this.wstoSpace.delete(ws); // delete the user ws 
   }
-  
+
   async dismissSpace(spaceId:string,userId:string){
     const space=this.spaces.get(spaceId);
     if(!space){
