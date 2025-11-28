@@ -107,7 +107,9 @@ async function processUserAction(type: string, data: Data, ws: WebSocket) {
         data.url,
       );
       break;
-
+    case 'dismiss-space':
+      await SpaceManager.getInstance().dismissSpace(data.spaceId,data.userId);
+      break;  
     case "play-next":
       await SpaceManager.getInstance().queue.add("play-next", {
         spaceId: data.spaceId,

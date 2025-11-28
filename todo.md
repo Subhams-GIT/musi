@@ -20,6 +20,15 @@
 - [x] only those participants which are in the stream should be seen not the ones in db 
 - [] better ui 
 - [] handle sidebar 
-- [] playnext highest voted one 
+- [] playnext highest voted one
 
-## once a user joins the server should send the list of all the present participants connected to the server 
+
+# when the current stream will be set in the db 
+1. whenever the current song ends and the next song will be played 
+2. when the first song is added :
+
+flaws
+1. there is no invalidation logic for the space
+2. the current stream is not set 
+3. playing options availiable for both streamer and voter 
+  

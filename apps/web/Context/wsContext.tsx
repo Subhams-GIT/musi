@@ -37,7 +37,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 
     socket.onclose = () => {
       ws.current?.close();
-      ws.current!.onmessage=null;
+      // ws.current!.onmessage=null;
       ws.current=null;
       reconnectTimeout.current = setTimeout(connect, 3000);
     };

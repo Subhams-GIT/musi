@@ -180,6 +180,9 @@ export default class SpaceManager {
       await this.createRoom(spaceID);
       space = this.spaces.get(spaceID);
     }
+    if(user?.userId!==space?.creatorId){
+      ws.send(JSON.stringify({type:'error',data:{message:'Authentication Error'}}))
+    }
     if (!user) {
       this.users.set(userID, {
         userId: userID,
@@ -529,7 +532,6 @@ export default class SpaceManager {
       return;
     }
     try{
-      
     console.log({spaceID,userID,url,currentStreamlength})
     await this.redisClient.set(
       `queue-length-${spaceID}`,
@@ -660,17 +662,24 @@ export default class SpaceManager {
       currentStreamlength: previousQueueLength,
     });
   }
-
-  disconnect(ws: WebSocket) {
+  
+  publishDeactivation(spaceId:string){
+    this.spaces.get(spaceId)?.users.forEach(user=>{
+      user.ws.send(JSON.stringify({type:`space-deactivated/${spaceId}`}))
+    })
+  }
+  async disconnect(ws: WebSocket) {
     console.log(process.pid + ": disconnect");
     let userId: string | null = null;
     const spaceId = this.wstoSpace.get(ws);
-
-    this.users.forEach((user, id) => {
+    if(!spaceId){
+      return new Error('spaceId not found');
+    }
+    const creatorId=this.spaces.get(spaceId??"")?.creatorId;
+    this.users.forEach(async (user, id) => {
       if(user.ws==ws){
         this.users.delete(user.userId);
-        userId = id;
-        
+        userId = id; 
       }
     });
 
@@ -686,4 +695,24 @@ export default class SpaceManager {
 
     this.wstoSpace.delete(ws); // delete the user ws 
   }
-}
+  
+  async dismissSpace(spaceId:string,userId:string){
+    const space=this.spaces.get(spaceId);
+    if(!space){
+      return new Error('space not found');
+    }
+    if(space.creatorId!==userId){
+      return new Error('only creator can dismiss the space');
+    }
+    this.prisma.space.update
+    ({
+      where:{id:spaceId},
+      data:{
+        isActive:false
+      }
+    })
+    this.spaces.delete(spaceId);
+    this.publishDeactivation(spaceId);
+
+  }
+}    

@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  DeleteIcon,
   Music,
   Pause,
   Play,
@@ -25,7 +26,6 @@ import { Streams } from "@/utils/types";
 import ReactPlayer from "react-player";
 
 
-
 type Participant = {
   id: string;
   name: string;
@@ -33,6 +33,7 @@ type Participant = {
 };
 
 export default function StreamPageStatic() {
+  let hostId="";
   const { data: session } = useSession();
   const user = session?.user;
   const context = useContext(WebSocketContext);
@@ -44,7 +45,7 @@ export default function StreamPageStatic() {
   const [streams, setStreams] = useState<Streams[]>([]);
   const [currentStream, setCurrentStream] = useState<Streams | null>(null);
   const [url, setUrl] = useState("");
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([{id:"",name:"",isHost:false}]);
   const [space, setSpace] = useState({
     name: "",
     id: "",
@@ -54,7 +55,7 @@ export default function StreamPageStatic() {
   const [loading, setLoading] = useState(false);
   const hasjoined = useRef(false);
   const currentSong = streams[0];
-
+  const [active,setisactive]=useState<boolean|null>(null);
   useEffect(() => {
     if (hasjoined.current) return;
     hasjoined.current = true;
@@ -73,7 +74,9 @@ export default function StreamPageStatic() {
             data: { token, userId: user?.id },
           })
         );
-        // console.log(data);
+        hostId=data.hostId;
+        setisactive(data.isActive);
+        console.log(data);
         setStreams(data.streams || []);
         setCurrentStream(data.currentStream || null);
         setParticipants(data.participants || []);
@@ -105,6 +108,7 @@ export default function StreamPageStatic() {
             a.upvotes === b.upvotes ? 0 : a.upvotes < b.upvotes ? 1 : -1
           )
       );
+      setCurrentStream(streams[0]||null);
     };
 
     const socket = context.ws.current;
@@ -114,23 +118,18 @@ export default function StreamPageStatic() {
 
         switch (type) {
           case `new-stream/${space.id}`:
-            console.log(data);
             setStreams((prev) => [...prev, data]);
             break;
 
           case `joined-space`:
             const totalParticipants:string[]=data.usernames.userIDs;
-            console.log({totalParticipants});
             const updatedParticipants:Participant[]=[];
-            console.log({participants});
             totalParticipants.forEach((userid:string) => {
               const isConnected=participants.findIndex(p=>p.id===userid)
-              console.log(isConnected);
               if(participants[isConnected]!=undefined && isConnected>-1){
                 updatedParticipants.push(participants[isConnected]);
               }
               });
-            console.log(updatedParticipants);
             setParticipants(updatedParticipants);
             break;
 
@@ -159,7 +158,10 @@ export default function StreamPageStatic() {
             setisplaying(false);
             break;
           case "error":
-            console.error(data.msg);
+            console.error(data.message);
+            break;
+           case `space-deactivated/${space.id}`:
+            setisactive(false);
             break;
           default:
             console.warn("Unknown WebSocket message:", type);
@@ -226,7 +228,12 @@ export default function StreamPageStatic() {
     },
     [context, user?.id, space.id]
   );
-
+  const leaveSpace=useCallback(()=>{
+    context?.sendMessage(JSON.stringify({
+      type:"dismiss-space",
+      data:{spaceId:space.id,userId:user?.id}
+    }))
+  },[]) 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-900 text-white italic animate-pulse">
@@ -234,7 +241,13 @@ export default function StreamPageStatic() {
       </div>
     );
   }
-
+  else if(active){
+    return (
+    <div className="flex items-center justify-center h-screen bg-black text-red-400">
+        Sorry the space is no more valid
+    </div>
+    )
+  }
   return (
     <div className="flex min-h-screen bg-gray-50 text-white">
       {/* Sidebar */}
@@ -268,12 +281,11 @@ export default function StreamPageStatic() {
 
               {currentStream?.userId === user?.id && (
                 <>
-                  <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <Users /> Add
+                {hostId===user?.id && (
+                  <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>leaveSpace()}>
+                    <DeleteIcon /> dismiss 
                   </button>
-                  <button className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <Settings /> Settings
-                  </button>
+                )}
                 </>
               )}
             </div>
@@ -305,24 +317,25 @@ export default function StreamPageStatic() {
                       </div>
                     </div>
 
-                    {currentStream && (
+                    {user?.id === participants[0]?.id && (
                       <ReactPlayer
-                        src={`https://www.youtube.com/watch?v=${currentStream.extractedId}`}
+                        src={`https://www.youtube.com/watch?v=${currentStream?.extractedId}`}
                         playing={isplaying}
                         className="inset-1 -z-10"
-                        onEnded={() =>
+                        onEnded={() =>{
+                          setCurrentStream(streams[1]||null);
                           setStreams(
                             streams.filter(
-                              (song) => song.id !== currentStream.id
+                              (song) => song.id !== currentStream?.id
                             )
                           )
-                        }
+                        }}
                       />
                     )}
 
                     <div className="flex items-center justify-center gap-4 pt-4">
                       <button className="h-12 w-12 flex items-center justify-center border rounded-full text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        {isplaying ? (
+                        {isplaying && participants[0]?.id === user?.id ? (
                           <Pause
                             onClick={() => {
                               controlSong("pause-song");
