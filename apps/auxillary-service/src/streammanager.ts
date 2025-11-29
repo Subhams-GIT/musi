@@ -3,7 +3,7 @@ import { createClient, RedisClientType } from "redis";
 import {GetVideoDetails} from "youtube-search-api";
 import { Job, Queue, Worker } from "bullmq";
 import { checkforurl } from "./util.js";
-import prisma from "@repo/db";
+import {prisma} from "./prisma.js";
 import { user } from "./types.js";
 
 const MAX_QUEUE_LENGTH = 20;
