@@ -27,6 +27,9 @@ importers:
 
   apps/auxillary-service:
     dependencies:
+      '@prisma/client':
+        specifier: ^6.14.0
+        version: 6.17.1(prisma@6.17.1(typescript@5.9.2))(typescript@5.9.2)
       '@repo/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -73,6 +76,9 @@ importers:
       nodemon:
         specifier: ^3.1.10
         version: 3.1.10
+      prisma:
+        specifier: ^6.17.1
+        version: 6.17.1(typescript@5.9.2)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.18.11)(typescript@5.9.2)
