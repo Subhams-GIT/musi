@@ -32,3 +32,4 @@ flaws
 2. the current stream is not set 
 3. playing options availiable for both streamer and voter 
   
+1. 
