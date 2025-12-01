@@ -11,6 +11,9 @@
     "dev": "nodemon --exec && pnpm run build && node dist/index.js && --watch src --ext ts",
     "check-types": "tsc --noEmit"
   },
+  "engines": {
+    "node": "22.20.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
