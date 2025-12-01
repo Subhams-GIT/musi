@@ -2,9 +2,9 @@ import WebSocket from "ws";
 import { createClient, RedisClientType } from "redis";
 import {GetVideoDetails} from "youtube-search-api";
 import { Job, Queue, Worker } from "bullmq";
-import { checkforurl } from "./util.js";
-import {prisma} from "./prisma.js";
-import { user } from "./types.js";
+import { checkforurl } from "./util";
+import prisma from "@repo/db";
+import { user } from "./types";
 
 const MAX_QUEUE_LENGTH = 20;
 const connection = {

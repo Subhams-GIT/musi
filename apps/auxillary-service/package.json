@@ -4,11 +4,11 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "start": "tsc -b && nodemon dist/index.js",
-    "postinstall": "pnpm dlx prisma generate --schema ../../packages/db/prisma/schema.prisma",
-    "build": "pnpm dlx prisma generate --schema ../../packages/db/prisma/schema.prisma && esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --format=cjs",
-    "dev": "pnpm dlx nodemon --exec \"pnpm run build && node dist/index.js\" --watch src --ext ts",
-    "predev": "pnpm --filter @repo/db run build",
+    "postinstall": "prisma generate --schema=../../packages/db/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=../../packages/db/prisma/schema.prisma",
+    "build": "pnpm run prisma:generate && esbuild --platform=node --format=cjs --outdir=dist --packages=external src/*.ts",
+    "start": " tsc -b && nodemon dist/index.js",
+    "dev": "nodemon --exec && pnpm run build && node dist/index.js && --watch src --ext ts",
     "check-types": "tsc --noEmit"
   },
   "keywords": [],
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/ws": "^8.18.1",
     "nodemon": "^3.1.10",
-    "prisma": "^6.17.1",
+    "prisma": "^7.0.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tsup": "^8.5.0",

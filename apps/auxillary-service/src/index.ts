@@ -2,7 +2,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import cluster from "cluster";
 import http from "http";
 import dotenv from "dotenv";
-import SpaceManager from "./streammanager.js";
+import SpaceManager from "./streammanager";
 //@ts-ignore
 import jwt from "jsonwebtoken";
 
