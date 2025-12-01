@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     // Enable latest features
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
@@ -26,5 +27,7 @@
     "paths": {
        "@repo/db": ["./repo/db/src/index.ts"]
     }
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }
