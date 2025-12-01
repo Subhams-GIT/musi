@@ -7,12 +7,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 
-
-  // console.log("Verified token payload:", token);
-  // { name, email, uid, sessionId, iat, exp, jti }
-
   return NextResponse.next();
 }
 export const config = {
-  matcher: ["/dashboard"], // ✅ only protect these
+  matcher: ["/dashboard","/create-stream","/join","my-streams","/spaces/join"],
 };

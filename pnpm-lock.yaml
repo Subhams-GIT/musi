@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@prisma/client-runtime-utils':
+        specifier: ^7.0.1
+        version: 7.0.1
       pnpm:
         specifier: ^10.24.0
         version: 10.24.0
@@ -133,6 +136,9 @@ importers:
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       embla-carousel-react:
         specifier: 8.5.1
         version: 8.5.1(react@19.2.0)
@@ -260,6 +266,9 @@ importers:
       '@prisma/client':
         specifier: ^7.0.1
         version: 7.0.1(prisma@7.0.1(@types/react@19.1.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.2))(typescript@5.9.2)
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       typescript:
         specifier: ^5.0.0
         version: 5.9.2

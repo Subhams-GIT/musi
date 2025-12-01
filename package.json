@@ -19,6 +19,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@prisma/client-runtime-utils": "^7.0.1",
     "pnpm": "^10.24.0"
   }
 }

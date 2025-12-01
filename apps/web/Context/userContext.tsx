@@ -2,7 +2,7 @@
 
 import { LoaderCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type User = {
@@ -12,32 +12,34 @@ type User = {
   id: string;
 };
 
-const UserContext = createContext<User | null>(null);
+const UserContext = createContext<User | null | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const { status, data } = useSession();
   
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/"); // or show login screen
-    }
-  }, [status]);
-  useEffect(() => {
     if (status === "authenticated" && data?.user) {
       setUser(data.user as User);
+    } else if (status === "unauthenticated") {
+      setUser(null);
+      if (pathname && pathname !== "/") {
+        router.push("/");
+      }
     }
-  }, [status, data]);
-  if (status === "loading") {
+  }, [status, data, pathname, router]);
+  
+  
+  if (status === "loading" && pathname !== "/") {
      return (
        <div className="flex items-center justify-center min-h-screen bg-black text-white">
          <div><LoaderCircleIcon className="animate-spin"/></div>
        </div>
-     );
+    );
    }
   
-
   return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 };
 
