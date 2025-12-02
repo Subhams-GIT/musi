@@ -10,5 +10,5 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 export const config = {
-  matcher: ["/dashboard","/create-stream","/join","my-streams","/spaces/join"],
+  matcher: ["/dashboard","/create-stream","/join","/my-streams","/spaces/join"],
 };

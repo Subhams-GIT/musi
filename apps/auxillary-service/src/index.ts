@@ -140,7 +140,7 @@ async function processUserAction(type: string, data: Data, ws: WebSocket) {
 async function handleUserAction(ws: WebSocket, type: string, data: Data) {
   console.log(SpaceManager.getInstance().users.size);
   const user = SpaceManager.getInstance().users.get(data.userId);
-  // console.log({user});
+  
   if (user) {
     data.userId = user.userId;
     await processUserAction(type, data, ws);
