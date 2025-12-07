@@ -46,7 +46,7 @@ const sidebar=React.memo(function SideBar() {
       initial={{ width: 60 }}
       animate={{ width: open ? 200 : 60 }}
       transition={{ duration: 0.3 }}
-      className={`h-screen flex flex-col justify-between bg-zinc-900 text-white`}
+      className={`h-screen flex flex-col justify-between bg-white text-orange-500 border border-t-0 border-r`}
     >
       {/* Toggle button */}
       <button
@@ -67,10 +67,11 @@ const sidebar=React.memo(function SideBar() {
               id={tab.id}
               onClick={() => handleTabClick(tab.id, tab.route)}
               className={`
+                hover:bg-zinc-200
                 flex items-center gap-3 py-2 mx-4 rounded-lg w-full justify-center
                 transition-all
                 ${open ? "px-6" : ""}
-                ${active ? "bg-blue-500" : open ? "bg-blue-600" : ""}
+                ${active ? "" : open ? "" : ""}
               `}
             >
               {tab.icon}

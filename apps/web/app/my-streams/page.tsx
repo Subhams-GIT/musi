@@ -74,12 +74,12 @@ export default function Page() {
       )}
 
       {/* Main content with left margin to accommodate sidebar */}
-      <div className="bg-black flex-1 flex flex-col overflow-y-auto">
+      <div className="bg-white text-orange-500 flex-1 flex flex-col overflow-y-auto">
         {/* header */}
         {windowsize > 768 && (
           <section className="flex justify-around items-center w-full p-4 mt-4 px-10">
             <section className="flex  flex-col justify-center items-start gap-1 ">
-              <section className="font-bold text-xl md:text-3xl text-white ">
+              <section className="font-bold text-xl md:text-3xl ">
                 My Streams
               </section>
               <section className="text-sm md:text-md text-gray-400">
@@ -88,7 +88,7 @@ export default function Page() {
             </section>
             <section className="">
               <Button
-                className="flex items-center  bg-white text-black rounded-md gap-2 px-3 py-2 text-sm md:text-md"
+                className="flex items-center  bg-orange-400 text-white rounded-md gap-2 px-3 py-2 text-sm md:text-md"
                 callback={() => alert("hello")}
               >
                 <Play />
@@ -101,19 +101,19 @@ export default function Page() {
         {/* Search bar for user */}
         <section className="w-full flex justify-center items-center  mt-10  pt-10 pb-4 ">
           <section className="w-full flex justify-center items-center">
-            <Search className="relative  border-l border-t border-b h-[40px] rounded-l-md text-gray-400" />
+            {/* <Search className="relative shadow-l h-[40px] rounded-l-md text-gray-400" /> */}
             <input
               type="text"
               placeholder={`Search your streams ....`}
               onChange={(e) => setsearchInput(e.target.value)}
-              className="w-[70%] h-[40px] pr-4 pl-2 py-2 rounded-r-md text-gray-100 flex justify-start items-center gap-2 border-r border-t border-b"
+              className="w-[60%] h-[50px] py-3 rounded-md text-gray-700 flex justify-start items-center gap-2 shadow"
             />
           </section>
         </section>
 
         {/* user tabs */}
         <section className="w-full flex items-center justify-center my-5">
-          <section className="flex w-[70%] bg-neutral-800 text-white justify-between items-center px-2 py-1 gap-5 rounded-md  ">
+          <section className="flex w-[60%] bg-orange-500 text-white justify-between items-center px-2 py-1 gap-5 rounded-md  ">
             <button
               name="Hosted"
               className={` w-[50%] px-4 rounded-md flex justify-center items-center py-1 gap-2 text-white bg-${activeTab === "Hosted" ? "black" : "bg-gray-500"}`}
@@ -135,7 +135,7 @@ export default function Page() {
 
         {/* tabs info show */}
         <section className="w-full flex justify-center items-center">
-          <div className="w-[70%] grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="w-[60%] grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeTab === "Hosted" &&
               allStreams.map(
                 (space: any) =>

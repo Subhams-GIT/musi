@@ -5,6 +5,7 @@ import { Job, Queue, Worker } from "bullmq";
 import { checkforurl } from "./util";
 import prisma from "@repo/db";
 import { user } from "./types";
+import axios from "axios";
 
 const MAX_QUEUE_LENGTH = 20;
 const connection = {
@@ -519,23 +520,14 @@ export default class SpaceManager {
     console.log('reached')
     if (!room || typeof currentStreamlength !== "number") return;
 
-    const extractedId = url.split("?v=")[1];
-    if (!extractedId) {
-      currentUser?.ws.send(
-          JSON.stringify({
-            type: "error",
-            data: { message: "Invalid YouTube URL" },
-          }),
-        )
-      return;
-    }
     try{
     console.log({spaceID,userID,url,currentStreamlength})
     await this.redisClient.set(
       `queue-length-${spaceID}`,
       String(currentStreamlength + 1),
     );
-    const res = await GetVideoDetails(extractedId);
+    console.log({url});
+    const res = await GetVideoDetails(url);
     console.log({res});
     if (!res || !res.thumbnail) {
       currentUser?.ws.send(
@@ -555,8 +547,8 @@ export default class SpaceManager {
       data: {
         id: crypto.randomUUID(),
         userId: userID,
-        url: url,
-        extractedId,
+        url: "",
+        extractedId:url,
         type: "Youtube",
         addedBy: userID,
         title: res.title ?? "Cant find video",
@@ -590,7 +582,7 @@ export default class SpaceManager {
     }
   }
 
-  async addToQueue(spaceId: string, currentUserId: string, url: string) {
+  async addToQueue(spaceId: string, currentUserId: string, text: string) {
     console.log(this.queue.count)
     const space = this.spaces.get(spaceId);
     const currentUser = this.users.get(currentUserId);
@@ -602,16 +594,15 @@ export default class SpaceManager {
       return;
     }
 
-    if (!checkforurl(url)) {
-      currentUser?.ws.send(
-          JSON.stringify({
-            type: "error",
-            data: { message: "Invalid YouTube URL" },
-          }),
-        )
-      return;
+    try {
+      
+    } catch (error) {
+      
     }
-
+  const res=await  axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&q="${text}"&type=video&key=${process.env.YOUTUBE_KEY}`)
+  
+    const id=res.data.items[0].id.videoId;
+    console.log({id});
     let previousQueueLengthStr = await this.redisClient.get(
       `queue-length-${spaceId}`,
     );
@@ -631,7 +622,7 @@ export default class SpaceManager {
       );
       
 
-      const alreadyAdded = await this.redisClient.get(`${spaceId}-${url}`);
+      const alreadyAdded = await this.redisClient.get(`${spaceId}-${text}`);
       if (alreadyAdded) {
         currentUser.ws.send(
             JSON.stringify({
@@ -656,7 +647,7 @@ export default class SpaceManager {
     await this.queue.add("add-stream", {
       spaceId,
       userId: currentUser.userId,
-      url,
+      url:id,
       currentStreamlength: previousQueueLength,
     });
   }
