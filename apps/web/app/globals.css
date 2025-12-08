@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
-.dark{
-    --primary-sidebar:oklch(0.274 0.006 286.033)
+
+@source "./app/**/*.{js,jsx,ts,tsx}";
+@source "./Components/**/*.{js,jsx,ts,tsx}";
+@source "./utils/**/*.{js}";
+html, body {
+  font-family: "sans-serif";
 }

@@ -46,7 +46,7 @@ const sidebar=React.memo(function SideBar() {
       initial={{ width: 60 }}
       animate={{ width: open ? 200 : 60 }}
       transition={{ duration: 0.3 }}
-      className={`h-screen flex flex-col justify-between bg-white text-orange-500 border border-t-0 border-r`}
+      className={`h-screen flex flex-col justify-between bg-white text-orange-500 border-0 `}
     >
       {/* Toggle button */}
       <button
