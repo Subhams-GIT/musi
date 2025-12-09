@@ -5,10 +5,10 @@ import { UserStatus, Spaces } from "@/utils/types";
 import SideBar, { Mobile_sidebar } from "@/Components/SideBar";
 import NavBar from "@/Components/NavBar";
 import useWindow from "@/hooks/window-hook";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 
 export default function Page() {
-  const session = useSession();
+  // const session = useSession();
   const [open, setopen] = useState(false);
   const [userStatus, setUserStatus] = useState<UserStatus>({
     "total Streams Done": 0,
@@ -21,7 +21,7 @@ export default function Page() {
     function fetchData() {
       fetch(`${window.location.protocol}//${window.location.hostname}:3000/api/userStatus`).then((d) => {
         d.json().then((d) => {
-          console.log(d.userStatus);
+          // console.log(d.userStatus);
           setUserStatus({
             "total Participants": d.userStatus.totalStreamsDone,
             "total Streams Attended": d.userStatus.totalStreamsAttended,
@@ -34,18 +34,18 @@ export default function Page() {
     fetchData();
   }, []);
 
-  console.log(session.data?.user.id);
+  // console.log(session.data?.user.id);
 
   const windowsize = useWindow();
 
   if (windowsize < 768) {
     return (
-      <div className="bg-black text-white min-h-screen w-full flex flex-col gap-10 p-6 md:p-10">
+      <div className="bg-white text-black min-h-screen w-full flex flex-col gap-10 p-6 md:p-10">
         <NavBar setopen={setopen} open={open} title="Stream Sync" />
         {open && <Mobile_sidebar setmopen={setopen} mobopen={open} />}
 
         {/* User stats */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 bg-white">
           <section className="text-left">
             <h1 className="text-2xl font-semibold mb-2">
               Welcome back to StreamSync
@@ -71,7 +71,7 @@ export default function Page() {
         </div>
 
         {/* Previous streams */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 bg-white">
           <section className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <div className="flex flex-col gap-1">
               <h2 className="text-xl font-semibold">Previous Streams</h2>

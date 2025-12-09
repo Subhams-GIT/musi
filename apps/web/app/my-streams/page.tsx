@@ -5,21 +5,21 @@ import {
   LeafyGreenIcon,
   Pause,
   Play,
-  Search,
   Share2,
   UserCheck,
   Users,
 } from "lucide-react";
 import SideBar, { Mobile_sidebar } from "Components/SideBar";
 import { Button } from "utils/utils";
-import { Hosted, Spaces } from "utils/types";
+import { Hosted} from "utils/types";
 import { useEffect, useState } from "react";
 import NavBar from "@/Components/NavBar";
 import useWindow from "hooks/window-hook";
-// import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Streamlayout } from "@/Components/StreamLayout";
 export default function Page() {
+  const router=useRouter();
   const [open, setopen] = useState(false);
   const [allStreams, setallStreams] = useState<Hosted>([]);
   const [originalStreams, setoriginalStreams] = useState<Hosted>(allStreams);
@@ -89,7 +89,7 @@ export default function Page() {
             <section className="">
               <Button
                 className="flex items-center  bg-orange-400 text-white rounded-md gap-2 px-3 py-2 text-sm md:text-md"
-                callback={() => alert("hello")}
+                callback={() => router.push('/create-stream')}
               >
                 <Play />
                 Create

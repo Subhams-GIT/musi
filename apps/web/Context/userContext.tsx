@@ -34,8 +34,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   
   if (status === "loading" && pathname !== "/") {
      return (
-       <div className="flex items-center justify-center min-h-screen bg-black text-white">
-         <div><LoaderCircleIcon className="animate-spin"/></div>
+       <div className="flex items-center justify-center min-h-screen bg-white">
+         <div><LoaderCircleIcon className="animate-spin h-5 w-5 "/></div>
        </div>
     );
    }
