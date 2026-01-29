@@ -7,40 +7,29 @@ import {
   HomeIcon,
   Music,
   Plus,
-  Sidebar,
   Sun,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import "../app/globals.css";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import React from "react";
+
+const mobopen=false;
 const sidebar=React.memo(function SideBar() {
   const router = useRouter();
-  const currentTab=useRef<string>(null);
-  const [selectedTab, setSelectedTab] = useState<string|null>(null);
-  const [open, setOpen] = useState(false);
+  let open=false
 
   const handleTabClick = (tab: string, route: string) => {
-    setSelectedTab(tab);
-    currentTab.current=tab;
     router.replace(`/${route}`);
   };
-  console.log(currentTab.current);
-  console.log(selectedTab);
+
   const tabs = [
     { id: "home", label: "Home", icon: <HomeIcon />, route: "dashboard" },
     { id: "myStreams", label: "Crown", icon: <Crown />, route: "my-streams" },
     { id: "create", label: "Create", icon: <Plus />, route: "create-stream" },
     { id: "music", label: "Music", icon: <Music />, route: "join" },
   ];
-  useEffect(() => {
-    const tab=currentTab.current;
-    if(tab!=null){
-      setSelectedTab(tab);
-    }
-}
-  , []);
   return (
     <motion.div
       initial={{ width: 60 }}
@@ -51,7 +40,7 @@ const sidebar=React.memo(function SideBar() {
       {/* Toggle button */}
       <button
         className="py-5 pt-10 flex justify-center w-full"
-        onClick={() => setOpen(!open)}
+        onClick={() => open=!open}
       >
         {open ? <ChevronLeft /> : <ChevronRight />}
       </button>
@@ -59,11 +48,10 @@ const sidebar=React.memo(function SideBar() {
       {/* Navigation buttons */}
       <div className="flex flex-col gap-3 items-center">
         {tabs.map((tab) => {
-          const active = tab.id === selectedTab;
 
           return (
             <button
-            key={tab.id}
+              key={tab.id}
               id={tab.id}
               onClick={() => handleTabClick(tab.id, tab.route)}
               className={`
@@ -71,7 +59,6 @@ const sidebar=React.memo(function SideBar() {
                 flex items-center gap-3 py-2 mx-4 rounded-lg w-full justify-center
                 transition-all
                 ${open ? "px-6" : ""}
-                ${active ? "" : open ? "" : ""}
               `}
             >
               {tab.icon}
@@ -80,9 +67,6 @@ const sidebar=React.memo(function SideBar() {
           );
         })}
       </div>
-      
-
-      {/* Footer (Theme button) */}
       <button className="flex justify-center items-center gap-2 py-3 w-full">
         <Sun />
         {open && <span>Theme</span>}
@@ -97,30 +81,19 @@ type sidebarprops = {
   setmopen: (value: boolean) => void;
 };
 
-function Mobile_sidebar({ mobopen, setmopen }: sidebarprops) {
+const Mobile_sidebar=useMemo(() =>{
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState("home");
-
-  useEffect(() => {
-    document.body.style.overflow = mobopen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobopen]);
-
   const handleTabClick = (tab: string, route: string) => {
-    setSelectedTab(tab);
     router.replace(`/${route}`);
-    setmopen(false);
   };
-
+console.log(mobopen)
   const tabs = [
     { id: "home", label: "Home", icon: <HomeIcon />, route: "dashboard" },
     { id: "myStreams", label: "Crown", icon: <Crown />, route: "my-streams" },
     { id: "create", label: "Create", icon: <Plus />, route: "create-stream" },
     { id: "music", label: "Music", icon: <Music />, route: "join" },
   ];
-
+  
   return (
     <motion.div
       initial={{ width: 0, opacity: 0 }}
@@ -136,23 +109,18 @@ function Mobile_sidebar({ mobopen, setmopen }: sidebarprops) {
       {/* Close Button */}
       <button
         className="w-full py-5 pt-10 border-b border-gray-700 flex justify-center"
-        onClick={() => setmopen(false)}
+        onClick={() => mobopen=!mobopen}
       >
         <ChevronLeft />
       </button>
-
-      {/* Navigation */}
       <div className="flex flex-col gap-4 mt-6 w-full items-center border-b border-gray-700 pb-6">
         {tabs.map((tab) => {
-          const active = tab.id === selectedTab;
-
           return (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab.id, tab.route)}
               className={`
                 w-[70%] px-8 py-2 rounded-lg text-sm flex justify-center items-center gap-3
-                ${active ? "bg-blue-500" : "bg-blue-600"}
               `}
             >
               {tab.icon} {tab.label}
@@ -168,7 +136,7 @@ function Mobile_sidebar({ mobopen, setmopen }: sidebarprops) {
       </button>
     </motion.div>
   );
-}
+},[mobopen])
 
 export default sidebar;
 export { Mobile_sidebar };

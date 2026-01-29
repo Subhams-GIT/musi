@@ -53,8 +53,8 @@ const testimonials = [
 ]
 
 export default function Landing(): React.JSX.Element { // Changed function name to PascalCase
-    return <div className="w-full max-w-7xl min-h-screen flex flex-col gap-10 bg-white text-gray-900">
-        <header className="w-screen fixed bg-white shadow-md flex justify-between items-center z-50">
+    return <div className="w-full max-w-screen min-h-screen flex flex-col gap-10 bg-white text-gray-900">
+        <header className="w-full fixed bg-white shadow-md flex justify-between items-center z-50">
             {/* Logo/Name: Orange accent */}
             <div className="flex items-center gap-3 p-3 text-orange-600 text-lg md:text-xl font-bold"><AudioLines className="w-6 h-6"/>StreamSync</div>
             
@@ -77,7 +77,7 @@ export default function Landing(): React.JSX.Element { // Changed function name 
             </div>
         </header>
 
-        <main className=" w-screen max-w-7xl flex flex-col justify-center items-center text-center mt-20 px-5 gap-10 flex-1 relative pt-10">
+        <main className=" w-screen  flex flex-col justify-center items-center text-center mt-20 px-5 gap-10 flex-1 relative pt-10">
             {/* Dotted background - Lighter grey */}
             <div
             className="absolute inset-0 -z-10 pointer-events-none opacity-50"

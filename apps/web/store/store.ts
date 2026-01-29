@@ -3,22 +3,21 @@
 // 2. user status
 // 3.
 import { create } from "zustand";
-import { History } from "@/utils/types";
-import axios from "axios";
+import {  Spaces } from "@/utils/types";
 import { UserStatus } from "@/utils/types";
-interface user{
-  spaces:History[],
-  totals:UserStatus,
-  setspaces:()=>void,
-  setStatus:()=>void,
+
+interface user {
+  spaces: Spaces[],
+  totals: UserStatus,
+  setspaces: (spaces: any) => void,
+  setStatus: (status:any) => void,
 }
-async function getuserstatus():Promise<History[]|null>{
-  const res=await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/spaces`);
-  return res.data.returnspaces;
-}
-const useSpaces = create((set) => ({
-  spaces:[],
-  insights:{},
-  setspaces: () => set((state:History) => ({ spaces: [...state,getuserstatus()] })),
-  setStatus:()=>set((state:UserStatus)=>({}))
-  }));
+
+export const useSpaces = create<user>((set) => ({
+  spaces: [],
+  totals: { "total Participants": 0, "total Streams Attended": 0, "total Streams Done": 0 },
+  setspaces: (spaces: any) => {
+    set(() => ({ spaces:spaces}))
+  },
+  setStatus: (status:any) => set(() => ({totals:status}))
+}));

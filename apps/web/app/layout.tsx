@@ -6,6 +6,8 @@ import logo from '/untitled.webp'
 import Provider from "./provider";
 import { WebSocketProvider } from "../Context/wsContext";
 import { Suspense } from "react";
+import NavBar from "@/Components/NavBar";
+import { Mobile_sidebar } from "@/Components/SideBar";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -33,9 +35,8 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Provider>
           <WebSocketProvider>
-            <Suspense fallback={<div>Loading...</div>}>
+           
               {children}
-            </Suspense>
           </WebSocketProvider>
         
         </Provider>

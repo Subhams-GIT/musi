@@ -8,21 +8,23 @@ import useWindow from "@/hooks/window-hook";
 import { signOut } from "next-auth/react";
 import { useSpaces } from "@/store/store";
 
-export default function Page() {
+export default function Dashboard() {
   const [open, setopen] = useState(false);
   const totals = useSpaces((s) => s.totals);
   const setStatus = useSpaces((s) => s.setStatus);
   const [loading, setloading] = useState(false);
 
   const userStatus = totals ?? {
-    "total Streams Done": 0,
-    "total Participants": 0,
-    "total Streams Attended": 0,
+    "total Streams Done": -1,
+    "total Participants": -1,
+    "total Streams Attended": -1,
   };
 
   useEffect(() => {
     if (
-      totals
+      totals["total Participants"] == -1 ||
+      totals["total Streams Attended"] == -1 ||
+      totals["total Streams Done"] === -1
     )
       return;
     setloading(true);
@@ -45,10 +47,12 @@ export default function Page() {
     finally{
       setloading(false)
     }
-  }, []);
+  }, [totals, setStatus]);
 
   const windowsize = useWindow();
+  
 
+  
   if (windowsize < 768) {
     return (
       <div className="bg-white text-black min-h-screen w-full flex flex-col gap-10 p-6 md:p-10">

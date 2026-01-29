@@ -23,11 +23,9 @@ import {
   Clock,
   LogOut,
 } from "lucide-react";
-
 import { WebSocketContext } from "@/Context/wsContext";
 import { Streams } from "@/utils/types";
 import SideBar from "@/Components/SideBar";
-// import useWindow from "@/hooks/window-hook";
 
 type Participant = {
   id: string;
@@ -57,12 +55,8 @@ export default function StreamPage() {
   const [loading, setLoading] = useState(true);
   const [active, setIsActive] = useState<boolean | null>(null);
   const hasJoined = useRef(false);
-
   const [url, setUrl] = useState("");
 
-  // ----------------------------
-  // JOIN ROOM
-  // ----------------------------
   useEffect(() => {
     if (!token || hasJoined.current) return;
     hasJoined.current = true;
@@ -72,12 +66,10 @@ export default function StreamPage() {
         const res = await axios.post(
           `${window.location.origin}/api/spaces/join?t=${token}`
         );
-
         const data = res.data.space;
 
         setStreams(data.streams || []);
         setCurrentStream(data.currentStream || null);
-        // setParticipants(data.participants || []);
         console.log(data.participants);
         totalparticipants.current = data.participants;
         setSpace({
@@ -87,13 +79,15 @@ export default function StreamPage() {
           link: data.link,
         });
         setIsActive(data.isActive);
-
-        context?.sendMessage(
-          JSON.stringify({
-            type: "join-room",
-            data: { token, userId: user?.id },
-          })
-        );
+        if(context!=null){
+          context.isConnected=true;
+          context.sendMessage(
+            JSON.stringify({
+              type: "join-room",
+              data: { token, userId: user?.id },
+            })
+          );
+        }
       } catch (err) {
         console.error(err);
       } finally {
